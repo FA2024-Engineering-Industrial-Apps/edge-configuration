@@ -5,6 +5,7 @@ from model import Motor, Wheels, VehicleTypeEnum, Vehicle
 from typing import Optional
 from llm import retrieve_model
 
+
 class AbstractVehiclePartsFactory(ABC):
 
     @abstractmethod
@@ -15,6 +16,7 @@ class AbstractVehiclePartsFactory(ABC):
     def create_motor(self, description: str) -> Optional[Motor]:
         pass
 
+
 class BikePartsFactory(AbstractVehiclePartsFactory):
 
     def create_wheels(self, description: str) -> Wheels:
@@ -22,7 +24,8 @@ class BikePartsFactory(AbstractVehiclePartsFactory):
 
     def create_motor(self, description: str) -> Optional[Motor]:
         return None
-    
+
+
 class CarPartsFactory(AbstractVehiclePartsFactory):
 
     def create_wheels(self, description: str) -> Wheels:
@@ -30,19 +33,21 @@ class CarPartsFactory(AbstractVehiclePartsFactory):
 
     def create_motor(self, description: str) -> Optional[Motor]:
         return retrieve_model(description, Motor)
-    
+
 
 def llm_determine_vehicle_type(description: str) -> VehicleTypeEnum:
     return retrieve_model(description, VehicleTypeEnum)
 
+
 def get_factory(vehicle_type: VehicleTypeEnum) -> AbstractVehiclePartsFactory:
-    if vehicle_type == 'bike':
+    if vehicle_type == "bike":
         return BikePartsFactory()
-    elif vehicle_type == 'car':
+    elif vehicle_type == "car":
         return CarPartsFactory()
     else:
-        raise ValueError(f'Unknown vehicle type: {vehicle_type}')
-    
+        raise ValueError(f"Unknown vehicle type: {vehicle_type}")
+
+
 def create_vehicle(description: str) -> Vehicle:
     vehicle_type = llm_determine_vehicle_type(description)
     factory = get_factory(vehicle_type)
