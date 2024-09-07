@@ -3,6 +3,7 @@ import instructor
 from openai import OpenAI
 import streamlit as st
 from enum import Enum
+import json
 
 
 def describe_options(enum_class):
@@ -32,7 +33,7 @@ def retrieve_model(prompt: str, model: BaseModel) -> BaseModel:
 
         if issubclass(model, Enum):
             model_definiton = describe_options(model)
-            json = client.chat.completions.create(
+            json_response = client.chat.completions.create(
                 model="mistral-7b-instruct",
                 messages=[
                     {
@@ -42,22 +43,25 @@ def retrieve_model(prompt: str, model: BaseModel) -> BaseModel:
                     {"role": "user", "content": prompt},
                 ],
             )
-            print(json.choices[0].message.content)
-            return model[json.choices[0].message.content.strip()]
+            print(json_response.choices[0].message.content)
+            return model[json_response.choices[0].message.content.strip()]
         else:
             model_definiton = model.model_json_schema()
-            json = client.chat.completions.create(
+            json_response = client.chat.completions.create(
                 model="mistral-7b-instruct",
                 messages=[
                     {
                         "role": "system",
                         "content": f"You're part of a vehicle factory and returning the configuration parts for a vehicle as json. "
                         + f"ONLY Return valid JSON from this definition {model_definiton}."
-                        + "ONLY include the content of the repsective model."
+                        + "ONLY include the fields of the respective model."
+                        + "DO NOT include the model name."
                         + "DO NOT ADD ANY ADDITIONAL INFORMATION!",
                     },
                     {"role": "user", "content": prompt},
                 ],
             )
-            print(json.choices[0].message.content)
-            return model.model_validate(json.choices[0].message.content.strip())
+            print(json_response.choices[0].message.content)
+            return model.model_validate(
+                json.loads(json_response.choices[0].message.content.strip())
+            )
