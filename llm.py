@@ -11,7 +11,7 @@ def describe_options(enum_class):
     return f"Available options: {', '.join(options)}"
 
 
-def retrieve_model(prompt: str, model: BaseModel) -> BaseModel:
+def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseModel:
     if st.session_state.get("model") == "gpt-4o":
         client = instructor.patch(OpenAI())
         return client.chat.completions.create(
@@ -20,7 +20,7 @@ def retrieve_model(prompt: str, model: BaseModel) -> BaseModel:
             messages=[
                 {
                     "role": "system",
-                    "content": f"You're part of a vehicle factory and returning the configuration parts for a vehicle as json.",
+                    "content": f"{instructions}. Return it as valid json.",
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -38,7 +38,7 @@ def retrieve_model(prompt: str, model: BaseModel) -> BaseModel:
                 messages=[
                     {
                         "role": "system",
-                        "content": f"You're part of a vehicle factory and returning the configuration parts for a vehicle. ONLY return ONE exact option! {model_definiton} DO NOT ADD ANY ADDITIONAL INFORMATION!",
+                        "content": f"{instructions}. ONLY return ONE exact option! {model_definiton} DO NOT ADD ANY ADDITIONAL INFORMATION!",
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -52,7 +52,7 @@ def retrieve_model(prompt: str, model: BaseModel) -> BaseModel:
                 messages=[
                     {
                         "role": "system",
-                        "content": f"You're part of a vehicle factory and returning the configuration parts for a vehicle as json. "
+                        "content": f"{instructions}. Return it as valid json."
                         + f"ONLY Return valid JSON from this definition {model_definiton}."
                         + "ONLY include the fields of the respective model."
                         + "DO NOT include the model name."

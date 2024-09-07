@@ -1,20 +1,27 @@
 import streamlit as st
-from factory import create_vehicle
 import os
+from strategy import VehicleStrategy, EdgeDeviceStrategy, Strategy
 
-st.title("Vehicle Configuration Generator")
+st.title("Configuration Generator")
 
 st.markdown(
-    "Set your OPENAI_API_KEY in the input below and write your description in the chat input. The assistant will generate a configuration for you."
+    "Configure your LLM Access in the input below and write your description in the chat input. The assistant will generate a configuration for you."
 )
+
+target = st.radio("Target", ["Vehicle", "Edge Device"])
+
+if target == "Vehicle":
+    strategy: Strategy = VehicleStrategy()
+else:
+    strategy: Strategy = EdgeDeviceStrategy()
 
 if prompt := st.chat_input("Describe the recipe you want to configure"):
     st.chat_message("user").markdown(prompt)
-    vehicle = create_vehicle(prompt)
+    pydantic_out = strategy.create_product(prompt)
     st.chat_message("assistant").markdown(
         f"""
         ```javascript
-        {vehicle.model_dump_json(indent=2)}
+        {pydantic_out.model_dump_json(indent=2)}
         """
     )
 

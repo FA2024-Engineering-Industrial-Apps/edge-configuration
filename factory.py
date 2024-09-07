@@ -20,7 +20,11 @@ class AbstractVehiclePartsFactory(ABC):
 class BikePartsFactory(AbstractVehiclePartsFactory):
 
     def create_wheels(self, description: str) -> Wheels:
-        return retrieve_model(description, Wheels)
+        return retrieve_model(
+            description,
+            Wheels,
+            "You're part of a vehicle factory and returning the configuration parts for a vehicle.",
+        )
 
     def create_motor(self, description: str) -> Optional[Motor]:
         return None
@@ -29,28 +33,15 @@ class BikePartsFactory(AbstractVehiclePartsFactory):
 class CarPartsFactory(AbstractVehiclePartsFactory):
 
     def create_wheels(self, description: str) -> Wheels:
-        return retrieve_model(description, Wheels)
+        return retrieve_model(
+            description,
+            Wheels,
+            "You're part of a vehicle factory and returning the configuration parts for a vehicle.",
+        )
 
     def create_motor(self, description: str) -> Optional[Motor]:
-        return retrieve_model(description, Motor)
-
-
-def llm_determine_vehicle_type(description: str) -> VehicleTypeEnum:
-    return retrieve_model(description, VehicleTypeEnum)
-
-
-def get_factory(vehicle_type: VehicleTypeEnum) -> AbstractVehiclePartsFactory:
-    if vehicle_type == "bike":
-        return BikePartsFactory()
-    elif vehicle_type == "car":
-        return CarPartsFactory()
-    else:
-        raise ValueError(f"Unknown vehicle type: {vehicle_type}")
-
-
-def create_vehicle(description: str) -> Vehicle:
-    vehicle_type = llm_determine_vehicle_type(description)
-    factory = get_factory(vehicle_type)
-    wheels = factory.create_wheels(description)
-    motor = factory.create_motor(description)
-    return Vehicle(type=vehicle_type, wheels=wheels, motor=motor)
+        return retrieve_model(
+            description,
+            Motor,
+            "You're part of a vehicle factory and returning the configuration parts for a vehicle.",
+        )
