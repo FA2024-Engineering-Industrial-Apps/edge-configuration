@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import List, Optional
 from enum import Enum
 from pydantic import Field
 
@@ -26,46 +26,57 @@ class Vehicle(BaseModel):
     motor: Optional[Motor] = None
 
 
-class Device(BaseModel):
-    edge_device_type: str = Field(
-        description="Device type of the Edge Device you want to onboard, for example SIMATIC IPC227E"
-    )
-    edge_device_name: str = Field(
-        description="""
-            Unique domain wide name of the Edge Device
-            Must contain 3 - 64 characters
-        """
-    )
-    edge_device_username: str = Field(
-        description="Valid email address of the user for signing into the Edge Device"
-    )
-    edge_device_password: str = Field(
-        description="""Password for signing into the Edge Device
-            Minimum 8 characters
-            Minimum 1 upper case letter
-            Minimum 1 special character
-            Minimum 1 number
-            The following characters are recognized as special characters:
-            ! @ # $ % ^ & * . ( ) _ +")"""
-    )
-    edge_device_confirm_password: str = Field(
-        description="Confirm Edge Device password"
-    )
+class StaticConfig(BaseModel):
+    IPv4: Optional[str] = ""
+    NetMask: Optional[str] = ""
+    Gateway: Optional[str] = ""
 
 
-class NetworkInterface(BaseModel):
-    gateway_interface: str
-    mac_address: str
-    ethernet_label: str
-    dhcp: str
-    ipv4: str
-    netmask: str
-    gateway: str
-    primary_dns: str
-    secondary_dns: str
-    start_ip_address: str
-    netmask_2: str
-    ip_address_range: str
+class DNSConfig(BaseModel):
+    PrimaryDNS: str
+    SecondaryDNS: str
+
+
+class L2Conf(BaseModel):
+    StartingAddressIPv4: str
+    NetMask: str
+    Range: str
+
+
+class SelectedL2Range(BaseModel):
+    id: str
+    nameToString: str
+
+
+class Interface(BaseModel):
+    MacAddress: str
+    GatewayInterface: bool
+    DHCP: str
+    Static: StaticConfig
+    DNSConfig: DNSConfig
+    L2Conf: L2Conf
+    isL2NetworkDisable: bool
+    selectedL2Range: SelectedL2Range
+
+
+class Network(BaseModel):
+    Interfaces: List[Interface]
+
+
+class DeviceConfig(BaseModel):
+    Network: Network
+    dockerIP: str
+
+
+class Onboarding(BaseModel):
+    localUserName: str
+    localPassword: str
+    deviceName: str
+
+
+class NTPServer(BaseModel):
+    ntpServer: str
+    preferred: Optional[bool] = False
 
 
 class Proxy(BaseModel):
@@ -73,11 +84,14 @@ class Proxy(BaseModel):
     protocol: str
     user: str
     password: str
-    no_proxy: Optional[str]
-    custom_ports: str
 
 
-class EdgeDevice(BaseModel):
+class Device(BaseModel):
+    onboarding: Onboarding
+    Device: DeviceConfig
+    ntpServers: List[NTPServer]
+    proxies: List[Proxy]
+
+
+class DeviceModel(BaseModel):
     device: Device
-    network_interface: NetworkInterface
-    proxy: Proxy

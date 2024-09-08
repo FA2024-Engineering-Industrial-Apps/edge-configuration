@@ -20,7 +20,7 @@ def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseMode
             messages=[
                 {
                     "role": "system",
-                    "content": f"{instructions}. Return it as valid json.",
+                    "content": f"{instructions}. Return it as valid json according to this model {model.model_json_schema()}.",
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -31,7 +31,7 @@ def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseMode
             api_key=st.session_state["mixtral_key"],
         )
 
-        if issubclass(model, Enum):
+        if issubclass(model, Enum):  # type: ignore
             model_definiton = describe_options(model)
             json_response = client.chat.completions.create(
                 model="mistral-7b-instruct",
@@ -44,7 +44,7 @@ def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseMode
                 ],
             )
             print(json_response.choices[0].message.content)
-            return model[json_response.choices[0].message.content.strip()]
+            return model[json_response.choices[0].message.content.strip()]  # type: ignore
         else:
             model_definiton = model.model_json_schema()
             json_response = client.chat.completions.create(
