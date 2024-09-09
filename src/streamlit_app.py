@@ -21,12 +21,11 @@ else:
 if prompt := st.chat_input("Describe the recipe you want to configure"):
     st.chat_message("user").markdown(prompt)
     pydantic_out = strategy.create_product(prompt)
-    st.chat_message("assistant").markdown(pydantic_out)
-     #   f"""
-     #   ```javascript
-     #   {pydantic_out. model_dump_json(indent=2)}
-     #   """
-    #)
+    st.chat_message("assistant").markdown(f"""
+        ```javascript
+        {pydantic_out. model_dump_json(indent=2)}
+        """
+    )
     if target == "Edge Device":
 
         def create_device_click():
