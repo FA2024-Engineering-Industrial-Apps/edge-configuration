@@ -56,8 +56,7 @@ def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseMode
                         + f"ONLY Return valid JSON from this definition {model_definiton}."
                         + "ONLY include the fields of the respective model."
                         + "DO NOT include the model name."
-                        + "DO NOT ADD ANY ADDITIONAL INFORMATION!"
-                        + "Format the output using markdown!",
+                        + "DO NOT ADD ANY ADDITIONAL INFORMATION!",
                     },
                     {"role": "user", "content": prompt},
                 ],
