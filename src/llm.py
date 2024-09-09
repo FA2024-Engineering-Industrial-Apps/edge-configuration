@@ -13,18 +13,34 @@ def describe_options(enum_class):
 
 def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseModel:
     if st.session_state.get("model") == "gpt-4o":
-        client = instructor.patch(OpenAI())
-        return client.chat.completions.create(
-            model="gpt-4o",
-            response_model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"{instructions}. Return it as valid json according to this model {model.model_json_schema()}.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-        )
+        if issubclass(model, Enum):
+            client = OpenAI()
+            model_definiton = describe_options(model)
+            json_response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"{instructions}. ONLY return ONE exact option! {model_definiton} DO NOT ADD ANY ADDITIONAL INFORMATION!",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+            )
+            return model[json_response.choices[0].message.content.strip()] 
+        else:
+            client = instructor.patch(OpenAI())
+            return client.chat.completions.create(
+                model="gpt-4o",
+                response_model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"{instructions}. Return it as valid json according to this model {model.model_json_schema()}.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+            )
+            
     else:
         client = OpenAI(
             base_url="https://api.siemens.com/llm/",
@@ -56,7 +72,7 @@ def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseMode
                         + f"ONLY Return valid JSON from this definition {model_definiton}."
                         + "ONLY include the fields of the respective model."
                         + "DO NOT include the model name."
-                        + "DO NOT ADD ANY ADDITIONAL INFORMATION!",
+                        + "DO NOT ADD ANY ADDITIONAL INFORMATION!"
                     },
                     {"role": "user", "content": prompt},
                 ],
