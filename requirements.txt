@@ -1,5 +1,5 @@
-streamlit
-openai
-pydantic
-instructor
-python-dotenv
+streamlit==1.38.0
+openai==1.44.0
+pydantic==2.9.0
+instructor==1.4.1
+python-dotenv==1.0.1

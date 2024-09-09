@@ -9,6 +9,6 @@ A simple "Hello World" to build a vehicle configuration via a chatbot.
 
 ## Docker
 
-- Build image `docker build -t edge-hell-world .`
+- Build image `docker build -t edge-hello-world .`
 - Run container `docker run -p 8501:8501 edge-hello-world`
 - Open "http://0.0.0.0:8501" in your Browser
