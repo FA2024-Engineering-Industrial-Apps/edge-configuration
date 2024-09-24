@@ -11,6 +11,8 @@ def get_token() -> str:
     response = requests.post(
         URL + "/login/direct", json={"username": user_name, "password": password}
     )
+    if not response.ok:
+        raise PermissionError("No token could be generated. Please check your username and password")
     token = response.json()["data"]["access_token"]
 
     return token
@@ -20,4 +22,3 @@ def get_edge_devices() -> list[dict]:
     response = requests.get(URL + "/devices", headers={"Authorization": get_token()})
     return response.json()["data"]
 
-print(get_edge_devices())
