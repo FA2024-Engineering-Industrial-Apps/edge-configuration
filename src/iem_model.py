@@ -11,8 +11,7 @@ class FunctionDescriptionPair:
     llm_description: Dict
 
 
-@dataclass
-class Field(ABC):
+class Field(ABC, BaseModel):
     name: str
     description: str
 
@@ -22,7 +21,6 @@ class Field(ABC):
 
 
 class NestedField(Field, ABC):
-    pass
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         all_functions = []
@@ -45,7 +43,7 @@ class ValueField(Field, ABC):
     def set_value(self, val: Any):
         self.value = val
 
-    def validate(self) -> bool:
+    def validate_value(self) -> bool:
         return True
 
     def setter_name(self, prefix) -> str:
@@ -67,7 +65,7 @@ class ValueField(Field, ABC):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "name": {
+                        "val": {
                             "type": self.data_type(),
                             "description": f"the new {self.name}",
                         },
@@ -83,7 +81,6 @@ class ValueField(Field, ABC):
         ]
 
 
-@dataclass
 class StringField(ValueField):
     value: Optional[str]
 

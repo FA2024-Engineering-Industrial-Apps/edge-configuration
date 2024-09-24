@@ -3,18 +3,29 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import Optional
 import json
-from iem_model import AbstractAppConfig, Field, StringField
+from iem_model import AbstractAppConfig, Field, StringField, NestedField
 
 load_dotenv()
 
 client = OpenAI()
 
 
-# Look for default function signatures
-class AuthenticationObject(AbstractAppConfig):
+class AuthenticationData(NestedField):
     username: StringField = StringField(
         name="username", description="the username of the user", value=None
     )
+
+    password: StringField = StringField(
+        name="password", description="the users password", value=None
+    )
+
+
+# Look for default function signatures
+class UserData(AbstractAppConfig):
+    auth_data: AuthenticationData = AuthenticationData(
+        name="authenticationdata", description="data for user auth"
+    )
+
     email: StringField = StringField(
         name="email", description="The email of the user", value=None
     )
@@ -23,7 +34,7 @@ class AuthenticationObject(AbstractAppConfig):
         return "Needs a username and a string"
 
 
-dataObj = AuthenticationObject()
+dataObj = UserData()
 
 
 tools = dataObj.generate_tool_functions()
@@ -39,16 +50,17 @@ tool_descriptions = [i.llm_description for i in tools]
 messages = [
     {
         "role": "user",
-        "content": "I want to update my name to 'Niclas' and email to 'mymy@py.co'",
+        "content": "I want to update my name to 'Niclas' and email to 'mymy@py.co' and password 123banana",
     }
 ]
+# print(tools)
 
 
 response = client.chat.completions.create(
     model="gpt-4o",
     messages=messages,
     tools=tool_descriptions,
-    tool_choice="auto",  # auto is default, but we'll be explicit
+    tool_choice="auto",
 )  # type: ignore
 
 
@@ -59,9 +71,8 @@ for tool_call in tool_calls:
     function_name = tool_call.function.name
     function_to_call = function_lib[function_name]
     function_args = json.loads(tool_call.function.arguments)
-    print(f"Function args {function_args}")
     function_response = function_to_call(
-        function_args,
+        **function_args,
     )
     messages.append(
         {
