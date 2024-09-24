@@ -1,13 +1,5 @@
-from openai import OpenAI
-from dotenv import load_dotenv
-from pydantic import BaseModel
-from typing import Optional
-import json
-from iem_model import AbstractAppConfig, Field, StringField, NestedField
-
-load_dotenv()
-
-client = OpenAI()
+from iem_model import AbstractAppConfig, StringField, NestedField
+from data_extraction import DataExtractor
 
 
 class AuthenticationData(NestedField):
@@ -36,16 +28,7 @@ class UserData(AbstractAppConfig):
 
 dataObj = UserData()
 
-
-tools = dataObj.generate_tool_functions()
-
-function_lib = {}
-
-for item in tools:
-    function_lib[item.name] = item.fct
-
-tool_descriptions = [i.llm_description for i in tools]
-
+extractor = DataExtractor(dataObj)
 
 messages = [
     {
@@ -53,34 +36,7 @@ messages = [
         "content": "I want to update my name to 'Niclas' and email to 'mymy@py.co' and password 123banana",
     }
 ]
-# print(tools)
 
-
-response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=messages,
-    tools=tool_descriptions,
-    tool_choice="auto",
-)  # type: ignore
-
-
-response_message = response.choices[0].message
-tool_calls = response_message.tool_calls
-
-for tool_call in tool_calls:
-    function_name = tool_call.function.name
-    function_to_call = function_lib[function_name]
-    function_args = json.loads(tool_call.function.arguments)
-    function_response = function_to_call(
-        **function_args,
-    )
-    messages.append(
-        {
-            "tool_call_id": tool_call.id,
-            "role": "tool",
-            "name": function_name,
-            "content": function_response,
-        }
-    )
+extractor.update_data(messages)
 
 print(dataObj)
