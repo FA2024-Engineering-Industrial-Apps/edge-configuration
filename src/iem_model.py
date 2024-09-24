@@ -28,7 +28,7 @@ class NestedField(Field, ABC):
             field_value = getattr(self, field_name)
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                        getattr(field_value, "generate_tool_functions")
+                    getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         prefix=prefix + "-" + self.name
@@ -88,6 +88,20 @@ class StringField(ValueField):
         return "string"
 
 
+class IntField(ValueField):
+    value: Optional[int]
+
+    def data_type(self) -> int:
+        return "int"
+
+
+class BoolField(ValueField):
+    value: Optional[bool]
+
+    def data_type(self) -> bool:
+        return "bool"
+
+
 class IPField(StringField):
     pass
 
@@ -115,7 +129,7 @@ class AbstractAppConfig(ABC, BaseModel):
             field_value = getattr(self, field_name)
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                        getattr(field_value, "generate_tool_functions")
+                    getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         prefix=""
@@ -124,22 +138,57 @@ class AbstractAppConfig(ABC, BaseModel):
         return all_functions
 
 
+# TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
+
+
+class OPCUATagConfig(AbstractAppConfig):
+    name: StringField
+    address: StringField
+    dataType: StringField
+    acquisitionCycle: IntField
+    acquisitionMode: StringField
+    isArrayTypeTag: BoolField
+    accessMode: StringField
+    comments: StringField
+
+
+class OPCUADatapointConfig(AbstractAppConfig):
+    name: StringField
+    tags: List[OPCUATagConfig]
+    OPCUAUrl: IPField
+    portNumber: IntField
+    # TODO: Create separate field types for fields below cause they are in fact enums
+    authenticationMode: IntField
+    encryptionMode: IntField
+    securityPolicy: IntField
+
+
+class DocumentationUAConnectorConfig(AbstractAppConfig):
+    datapoints: List[
+        OPCUADatapointConfig
+    ]  # For S7, S7Plus change to collection of lists
+    dbservicename: StringField
+    # TODO: Maybe move authentication data somewhere else?
+    username: StringField
+    password: StringField
+
+
 class UAConnectorConfig(AbstractAppConfig):
     nameField: StringField = StringField(
-            name="Name",
-            description="The name of the corresponding OPC UA Server.",
-            value=None
-        )
+        name="Name",
+        description="The name of the corresponding OPC UA Server.",
+        value=None,
+    )
     urlField: StringField = StringField(
-            name="OPC-UA_URL",
-            description="The URL of the corresponding OPC UA Server.",
-            value=None
-        )
+        name="OPC-UA_URL",
+        description="The URL of the corresponding OPC UA Server.",
+        value=None,
+    )
     portField: PortField = PortField(
-            name="Port_number",
-            description="The port number from which the data of OPC UA Server will be sent.",
-            value=None
-        )
+        name="Port_number",
+        description="The port number from which the data of OPC UA Server will be sent.",
+        value=None,
+    )
 
     def __init__(self, /, **data: Any):
         super().__init__(**data)
@@ -162,9 +211,12 @@ class UAConnectorConfig(AbstractAppConfig):
         ]
         """
         return string.format(
-            self.nameField.name, self.nameField.description,
-            self.urlField.name, self.urlField.description,
-            self.portField.name, self.portField.description
+            self.nameField.name,
+            self.nameField.description,
+            self.urlField.name,
+            self.urlField.description,
+            self.portField.name,
+            self.portField.description,
         )
 
 
@@ -185,4 +237,16 @@ class App:
             app-description: {1},
             fields: {2}
         }}
-        """.format(self.application_name, self.application_description, self.config.generate_prompt_string())
+        """.format(
+            self.application_name,
+            self.application_description,
+            self.config.generate_prompt_string(),
+        )
+
+    datapoints: List[
+        OPCUADatapointConfig
+    ]  # For S7, S7Plus change to collection of lists
+    dbservicename: StringField
+    # TODO: Maybe move authentication data somewhere else?
+    username: StringField
+    password: StringField
