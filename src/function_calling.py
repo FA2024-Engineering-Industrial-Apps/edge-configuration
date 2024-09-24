@@ -18,13 +18,16 @@ class AuthenticationObject(BaseModel):
     def update_username(self, name):
         self.username = name
 
+    def update_mail(self, mail):
+        self.email = mail
+
 
 dataObj = AuthenticationObject()
 
 messages = [
     {
         "role": "user",
-        "content": "I want to update my name to 'Niclas'",
+        "content": "I want to update my name to 'Niclas' and email to 'mymy@py.co'",
     }
 ]
 
@@ -47,13 +50,33 @@ def generate_function_signatures():
                     "required": ["name"],
                 },
             },
-        }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "update_mail",
+                "description": "Update the mail address",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "mail": {
+                            "type": "string",
+                            "description": "the new mail",
+                        },
+                    },
+                    "required": ["mail"],
+                },
+            },
+        },
     ]
     return tools
 
 
 def get_function_lib():
-    return {"update_username": dataObj.update_username}
+    return {
+        "update_username": dataObj.update_username,
+        "update_mail": dataObj.update_mail,
+    }
 
 
 response = client.chat.completions.create(
@@ -71,8 +94,9 @@ for tool_call in tool_calls:
     function_name = tool_call.function.name
     function_to_call = get_function_lib()[function_name]
     function_args = json.loads(tool_call.function.arguments)
+    print(f"Function args {function_args}")
     function_response = function_to_call(
-        name=function_args.get("name"),
+        function_args,
     )
     messages.append(
         {
@@ -84,3 +108,5 @@ for tool_call in tool_calls:
     )
 
 print(dataObj)
+
+print(messages)
