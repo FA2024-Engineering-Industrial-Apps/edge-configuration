@@ -6,6 +6,7 @@ from factory import BikePartsFactory, CarPartsFactory, AbstractVehiclePartsFacto
 
 from model import DeviceModel, Vehicle, VehicleTypeEnum
 from llm import retrieve_model
+from iem_model import App, UAConnectorConfig
 
 
 class Strategy(ABC):
@@ -64,26 +65,32 @@ Each config consists of fields, which have to be filled.
 Each field has a name, how the field is called in the user interface, and a description, what should be entered
 in this field.
 
-Appname: OPC UA Connector
-App-Description:
-Config:
-{
-    fields: [
-        {
-            name: OPC-UA URL
-            description: The URL of the OPC UA Server
-        }
-    ]
-}
+{0}
 
 You help the user to configure any app he wants to use.
 For this every field of every app config he wants to use has to be filled with a value.
 Ask the user for the values, and answer his questions about the apps and the fields.
     """
 
+    def create_app_overview(self) -> str:
+        opc_ua_connector = App(
+            name="OPC UA Connector",
+            description="A app which connects to a configured OPC UA Server and collects data from this.",
+            config=UAConnectorConfig()
+        )
+        return """
+        {{
+            apps: [
+                {0}
+            ]
+        }}
+        """.format(opc_ua_connector.generate_prompt_string())
+
     def create_product(self, prompt: str) -> str:
+        adapted_system_prompt = self.system_prompt.format(self.create_app_overview())
+        print(adapted_system_prompt)
         return retrieve_model(
             prompt,
             None,
-            self.system_prompt
+            adapted_system_prompt
         )

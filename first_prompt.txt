@@ -10,17 +10,8 @@ Each config consists of fields, which have to be filled.
 Each field has a name, how the field is called in the user interface, and a description, what should be entered
 in this field.
 
-Appname: OPC UA Connector
-App-Description:
-Config:
-{
-    fields: [
-        {
-            name: OPC-UA URL
-            description: The URL of the OPC UA Server
-        }
-    ]
-}
+
+{0}
 
 You help the user to configure any app he wants to use.
 For this every field of every app config he wants to use has to be filled with a value.
