@@ -10,7 +10,7 @@ class FunctionDescriptionPair:
     fct: Callable[..., None]
     llm_description: Dict
 
-
+# most general definition of a Field
 class Field(ABC, BaseModel):
     name: str
     description: str
@@ -19,13 +19,13 @@ class Field(ABC, BaseModel):
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         pass
 
-
 class NestedField(Field, ABC):
+
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         all_functions = []
-        for field_name, field_type in self.__dict__.items():
-            field_value = getattr(self, field_name)
+        for field_name, field_value in self.__dict__.items():
+
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
                         getattr(field_value, "generate_tool_functions")
