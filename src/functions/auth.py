@@ -13,18 +13,20 @@ AUTH_URL = "https://ferienakademie-udeliyih.iem.eu1.edge.siemens.cloud/auth/real
 def get_token() -> str:
     if not CLIENT_ID or not CLIENT_SECRET:
         raise LookupError("Client id or secret not found!")
-    
-    response = requests.post(
-        AUTH_URL,
-        data={
-            "grant_type": "client_credentials",
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
-    )
-    if not response.ok:
-        raise PermissionError("No token could be generated. Please check your username and password")
 
-    return response.json()["access_token"]
+    if "TOKEN" not in os.environ:
+        response = requests.post(
+            AUTH_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+            },
+        )
+        if not response.ok:
+            raise PermissionError(
+                "No token could be generated. Please check your username and password"
+            )
+        os.environ["TOKEN"] = response.json()["access_token"]
 
-
+    return os.environ["TOKEN"]

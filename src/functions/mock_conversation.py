@@ -7,8 +7,21 @@ def conversation():
     for index, edge_device in enumerate(edge_devices):
         print(f"{index+1}: {edge_device['deviceName']} ({edge_device['deviceId']} - {edge_device["deviceStatus"]})")
     
-    print("Which edge device do you want to configure? Please enter a the device id!")
-    dev_id = input("")
-    print(f"This is the device id you selected {dev_id}")
+    print()
+    print("Which device do you want to act as the OPC-UA server?")
+    
+    server_id = int(input("(Please enter the index of the device) "))
+
+    print(f"You selected {edge_devices[server_id-1]["deviceName"]}.")
+    
+    print()
+    
+    print("Which device do you want to connect to the server?")
+    
+    client = int(input("(Please enter the index of the device) "))
+
+    print(f"You selected {edge_devices[client-1]["deviceName"]}.")
+    print("The apps will now be installed...")
+    
     
 conversation()
