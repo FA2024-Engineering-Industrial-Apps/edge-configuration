@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from strategy import VehicleStrategy, EdgeDeviceStrategy, Strategy
+from strategy import VehicleStrategy, EdgeDeviceStrategy, Strategy, EdgeConfigStrategy
 from iem_api_client import create_device
 
 st.title("Configuration Generator")
@@ -9,12 +9,14 @@ st.markdown(
     "Configure your LLM Access in the input below and write your description in the chat input. The assistant will generate a configuration for you."
 )
 
-target = st.radio("Target", ["Vehicle", "Edge Device"])
+target = st.radio("Target", ["Vehicle", "Edge Device", "Edge Config"])
 
 strategy: Strategy = None  # type: ignore
 
 if target == "Vehicle":
     strategy = VehicleStrategy()  # type: ignore
+if target == "Edge Config":
+    strategy = EdgeConfigStrategy()
 else:
     strategy = EdgeDeviceStrategy()
 
@@ -23,7 +25,7 @@ if prompt := st.chat_input("Describe the recipe you want to configure"):
     pydantic_out = strategy.create_product(prompt)
     st.chat_message("assistant").markdown(f"""
         ```javascript
-        {pydantic_out. model_dump_json(indent=2)}
+        {pydantic_out}
         """
     )
     if target == "Edge Device":

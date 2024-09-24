@@ -11,9 +11,9 @@ def describe_options(enum_class):
     return f"Available options: {', '.join(options)}"
 
 
-def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseModel:
+def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> str:
     if st.session_state.get("model") == "gpt-4o":
-        if issubclass(model, Enum):
+        if model is not None and issubclass(model, Enum):
             client = OpenAI()
             model_definiton = describe_options(model)
             json_response = client.chat.completions.create(
@@ -21,7 +21,7 @@ def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseMode
                 messages=[
                     {
                         "role": "system",
-                        "content": f"{instructions}. ONLY return ONE exact option! {model_definiton} DO NOT ADD ANY ADDITIONAL INFORMATION!",
+                        "content": f"{instructions}",
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -35,7 +35,7 @@ def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseMode
                 messages=[
                     {
                         "role": "system",
-                        "content": f"{instructions}. Return it as valid json according to this model {model.model_json_schema()}.",
+                        "content": f"{instructions}",
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -47,14 +47,14 @@ def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseMode
             api_key=st.session_state["mixtral_key"],
         )
 
-        if issubclass(model, Enum):  # type: ignore
+        if model is not None and issubclass(model, Enum):  # type: ignore
             model_definiton = describe_options(model)
             json_response = client.chat.completions.create(
                 model="mistral-7b-instruct",
                 messages=[
                     {
                         "role": "system",
-                        "content": f"{instructions}. ONLY return ONE exact option! {model_definiton} DO NOT ADD ANY ADDITIONAL INFORMATION!",
+                        "content": f"{instructions}",
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -62,22 +62,16 @@ def retrieve_model(prompt: str, model: BaseModel, instructions: str) -> BaseMode
             print(json_response.choices[0].message.content)
             return model[json_response.choices[0].message.content.strip()]  # type: ignore
         else:
-            model_definiton = model.model_json_schema()
-            json_response = client.chat.completions.create(
+             # model_definiton = model.model_json_schema()
+            response = client.chat.completions.create(
                 model="mistral-7b-instruct",
                 messages=[
                     {
                         "role": "system",
-                        "content": f"{instructions}. Return it as valid json."
-                        + f"ONLY Return valid JSON from this definition {model_definiton}."
-                        + "ONLY include the fields of the respective model."
-                        + "DO NOT include the model name."
-                        + "DO NOT ADD ANY ADDITIONAL INFORMATION!"
+                        "content": f"{instructions}"
                     },
                     {"role": "user", "content": prompt},
                 ],
             )
-            print(json_response.choices[0].message.content)
-            return model.model_validate(
-                json.loads(json_response.choices[0].message.content.strip())
-            )
+            # print(json_response.choices[0].message.content)
+            return response.choices[0].message.content.strip()
