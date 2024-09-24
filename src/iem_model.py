@@ -126,7 +126,8 @@ class UAConnectorConfig(AbstractAppConfig):
     urlField: StringField
     portField: PortField
 
-    def __init__(self):
+    def __init__(self, /, **data: Any):
+        super().__init__(**data)
         self.nameField = StringField(
             name="Name",
             description="The name of the corresponding OPC UA Server.",
