@@ -11,8 +11,7 @@ class FunctionDescriptionPair:
     llm_description: Dict
 
 
-@dataclass
-class Field(ABC):
+class Field(ABC, BaseModel):
     name: str
     description: str
 
@@ -22,7 +21,6 @@ class Field(ABC):
 
 
 class NestedField(Field, ABC):
-    pass
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         all_functions = []
@@ -83,7 +81,6 @@ class ValueField(Field, ABC):
         ]
 
 
-@dataclass
 class StringField(ValueField):
     value: Optional[str]
 
