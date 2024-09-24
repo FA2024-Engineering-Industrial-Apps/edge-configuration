@@ -18,6 +18,8 @@ class Field(ABC, BaseModel):
     @abstractmethod
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         pass
+
+
 class NestedField(Field, ABC):
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
@@ -26,7 +28,7 @@ class NestedField(Field, ABC):
             field_value = getattr(self, field_name)
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                    getattr(field_value, "generate_tool_functions")
+                        getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         prefix=prefix + "-" + self.name
@@ -96,6 +98,7 @@ class IntegerField(ValueField):
     def data_type(self) -> str:
         return "integer"
 
+
 class PortField(IntegerField):
     pass
 
@@ -112,7 +115,7 @@ class AbstractAppConfig(ABC, BaseModel):
             field_value = getattr(self, field_name)
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                    getattr(field_value, "generate_tool_functions")
+                        getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         prefix=""
@@ -122,24 +125,24 @@ class AbstractAppConfig(ABC, BaseModel):
 
 
 class UAConnectorConfig(AbstractAppConfig):
-    nameField: StringField
-    urlField: StringField
-    portField: PortField
+    nameField: StringField = StringField(
+            name="Name",
+            description="The name of the corresponding OPC UA Server.",
+            value=None
+        )
+    urlField: StringField = StringField(
+            name="OPC-UA_URL",
+            description="The URL of the corresponding OPC UA Server.",
+            value=None
+        )
+    portField: PortField = PortField(
+            name="Port_number",
+            description="The port number from which the data of OPC UA Server will be sent.",
+            value=None
+        )
 
     def __init__(self, /, **data: Any):
         super().__init__(**data)
-        self.nameField = StringField(
-            name="Name",
-            description="The name of the corresponding OPC UA Server.",
-        )
-        self.urlField = StringField(
-            name="OPC-UA URL",
-            description="The URL of the corresponding OPC UA Server.",
-        )
-        self.portField = PortField(
-            name="Port number",
-            description="The port number from which the data of OPC UA Server will be sent.",
-        )
 
     def generate_prompt_string(self):
         string = """

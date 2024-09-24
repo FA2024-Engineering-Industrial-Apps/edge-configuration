@@ -22,3 +22,5 @@ Ask the user for the values, and answer his questions about the apps and the fie
 ---
 
 I want to configure an OPC UA Connector. What fields do I need to fill in?
+
+I want to create a UAConnectorConfig and I want to update the field "name" with the value "hello"

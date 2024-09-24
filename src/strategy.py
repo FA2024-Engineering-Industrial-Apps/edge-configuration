@@ -89,8 +89,9 @@ Ask the user for the values, and answer his questions about the apps and the fie
     def create_product(self, prompt: str) -> str:
         adapted_system_prompt = self.system_prompt.format(self.create_app_overview())
         print(adapted_system_prompt)
+        config_object = UAConnectorConfig()
         return retrieve_model(
             prompt,
-            None,
+            config_object,
             adapted_system_prompt
         )
