@@ -43,7 +43,7 @@ class ValueField(Field, ABC):
     def set_value(self, val: Any):
         self.value = val
 
-    def validate(self) -> bool:
+    def validate_value(self) -> bool:
         return True
 
     def setter_name(self, prefix) -> str:
@@ -65,7 +65,7 @@ class ValueField(Field, ABC):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "name": {
+                        "val": {
                             "type": self.data_type(),
                             "description": f"the new {self.name}",
                         },

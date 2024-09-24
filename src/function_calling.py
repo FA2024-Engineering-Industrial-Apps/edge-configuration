@@ -53,9 +53,7 @@ messages = [
         "content": "I want to update my name to 'Niclas' and email to 'mymy@py.co' and password 123banana",
     }
 ]
-
-
-print(tools)
+# print(tools)
 
 
 response = client.chat.completions.create(
@@ -74,7 +72,7 @@ for tool_call in tool_calls:
     function_to_call = function_lib[function_name]
     function_args = json.loads(tool_call.function.arguments)
     function_response = function_to_call(
-        function_args,
+        **function_args,
     )
     messages.append(
         {
