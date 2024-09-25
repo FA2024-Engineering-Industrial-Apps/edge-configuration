@@ -15,28 +15,23 @@ def describe_options(enum_class):
     return f"Available options: {', '.join(options)}"
 
 
-def retrieve_model(prompt: str, model: AbstractAppConfig, instructions: str) -> str:
+def retrieve_model(prompt: str, model: AbstractAppConfig, history: list) -> str:
     if st.session_state.get("model") == "gpt-4o":
         load_dotenv()
         client = instructor.patch(OpenAI())
         data_extractor = DataExtractor(model)
+        messages = [history[0]]
+        for element in history[-2:]:
+            if element["role"] == "system":
+                continue
+            messages.append(element)
+        messages.append({"role": "user", "content": prompt})
+        print(messages)
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"{instructions}",
-                },
-                {"role": "user", "content": prompt},
-            ],
+            messages=messages
         )
-        tool_response = data_extractor.update_data([
-                {
-                    "role": "system",
-                    "content": f"{instructions}",
-                },
-                {"role": "user", "content": prompt},
-            ])
+        data_extractor.update_data(messages)
         print(model)
 
         return response.choices[0].message.content.strip()

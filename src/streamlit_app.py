@@ -18,15 +18,16 @@ if target == "Edge Config":
     if "messages" not in st.session_state:
         st.session_state.messages = []
     for message in st.session_state.messages:
+        if message["role"] == "system":
+            continue
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
 if prompt := st.chat_input("Write something"):
     with st.chat_message("user"):
         st.markdown(prompt)
+    pydantic_out = strategy.send_message(prompt, st.session_state.messages)
     st.session_state.messages.append({"role": "user", "content": prompt})
-    # pydantic_out = strategy.create_product(prompt)
-    pydantic_out = "test"
     st.session_state.messages.append({"role": "assistant", "content": pydantic_out})
     st.chat_message("assistant").markdown(f"""
         ```javascript

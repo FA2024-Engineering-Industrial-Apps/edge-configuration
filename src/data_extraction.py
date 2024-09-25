@@ -33,6 +33,9 @@ class DataExtractor:
         response_message = response.choices[0].message
         tool_calls = response_message.tool_calls
 
+        if not tool_calls:
+            return
+
         for tool_call in tool_calls:
             function_name = tool_call.function.name
             function_to_call = self.function_lib[function_name]
