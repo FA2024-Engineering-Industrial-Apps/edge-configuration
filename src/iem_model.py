@@ -108,9 +108,6 @@ class ValueField(Field, ABC):
     def set_value(self, val: Any):
         self.value = val
 
-    def get_value(self):
-        return self.value
-
     def validate_value(self) -> bool:
         return True
 
@@ -120,12 +117,6 @@ class ValueField(Field, ABC):
             return f"{self.variable_name}-set_value"
         else:
             return f"{prefix}-{self.variable_name}-set_value"
-
-    def getter_name(self, prefix) -> str:
-        if not prefix:
-            return f"{self.variable_name}-get_value"
-        else:
-            return f"{prefix}-{self.variable_name}-get_value"
 
     @abstractmethod
     def data_type(self) -> str:
@@ -150,29 +141,12 @@ class ValueField(Field, ABC):
                 },
             },
         }
-        get_dct = {
-            "type": "function",
-            "function": {
-                "name": self.getter_name(prefix),
-                "description": f"Gets the current value from {self.variable_name}",
-                "parameters": {
-                    "type": "object",
-                    "properties": {},
-                    "required": [self.variable_name],
-                },
-            },
-        }
         return [
             FunctionDescriptionPair(
                 name=self.setter_name(prefix),
                 fct=self.set_value,
                 llm_description=set_dct,
-            ),
-            FunctionDescriptionPair(
-                name=self.getter_name(prefix),
-                fct=self.get_value,
-                llm_description=get_dct,
-            ),
+            )
         ]
 
 
