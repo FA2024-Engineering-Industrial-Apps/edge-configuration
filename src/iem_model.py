@@ -71,7 +71,7 @@ class ValueField(Field, ABC):
 
     # returns a list containing the FunctionDescriptionPairs of the ValueField
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
-        dct = {
+        set_dct = {
             "type": "function",
             "function": {
                 "name": self.setter_name(prefix),
