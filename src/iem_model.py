@@ -93,17 +93,19 @@ class StringField(ValueField):
 
     def data_type(self) -> str:
         return "string"
-    
+
+
 class IntField(ValueField):
     value: Optional[int]
 
-    def data_type(self) -> int:
+    def data_type(self) -> str:
         return "int"
-    
+
+
 class BoolField(ValueField):
     value: Optional[bool]
 
-    def data_type(self) -> bool:
+    def data_type(self) -> str:
         return "bool"
 
 
@@ -155,10 +157,11 @@ class AbstractAppConfig(ABC, BaseModel):
                     )
                     all_functions += sub_functions
         return all_functions
-    
-    
-# TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?    
-    
+
+
+# TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
+
+
 class OPCUATagConfig(AbstractAppConfig):
     name: StringField
     address: StringField
@@ -168,7 +171,7 @@ class OPCUATagConfig(AbstractAppConfig):
     isArrayTypeTag: BoolField
     accessMode: StringField
     comments: StringField
-    
+
 
 class OPCUADatapointConfig(AbstractAppConfig):
     name: StringField
@@ -226,7 +229,6 @@ class DocumentationUAConnectorConfig(AbstractAppConfig):
 
 
 class UAConnectorConfig(AbstractAppConfig):
-<<<<<<< HEAD
     nameField: StringField = StringField(
         variable_name="Name",
         description="The name of the corresponding OPC UA Server.",
@@ -295,11 +297,3 @@ class App:
             self.application_description,
             self.config.generate_prompt_string(),
         )
-=======
-    datapoints: List[OPCUADatapointConfig] # For S7, S7Plus change to collection of lists
-    dbservicename: StringField
-    # TODO: Maybe move authentication data somewhere else?
-    username: StringField
-    password: StringField
-    
->>>>>>> 118691dcd769cb4e2611699b84f99484714115e8
