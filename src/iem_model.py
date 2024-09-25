@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Callable, Optional
+from typing_extensions import Unpack
 from pydantic.dataclasses import dataclass
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 @dataclass
@@ -21,10 +22,59 @@ class Field(ABC, BaseModel):
 
 
 class ListField(Field):
-    items: List[Field]
+    items: List[Field] = []
+
+    blueprint: Field
+
+    def create_item(self, number: int):
+        for i in range(number):
+            self.items.append(self.blueprint.model_copy(deep=True))
+
+    def create_prefix(self, preprefix: str) -> str:
+        if preprefix == "":
+            return self.variable_name
+        return f"{preprefix}-{self.variable_name}"
+
+    def type_name(self) -> str:
+        return type(self.blueprint).__name__
+
+    def generate_create_function(self, prefix="") -> List[FunctionDescriptionPair]:
+        name = self.create_item_name(prefix)
+        fct = self.create_item
+        llm_description = {
+            "type": "function",
+            "function": {
+                "name": name,
+                "description": f"Create a new entries for {self.blueprint.variable_name} of type {self.type_name()}",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "number": {
+                            "type": "integer",
+                            "description": f"Amount of new {self.type_name()} to create",
+                        },
+                    },
+                    "required": [self.variable_name],
+                },
+            },
+        }
+        return [
+            FunctionDescriptionPair(name=name, fct=fct, llm_description=llm_description)
+        ]
+
+    def create_item_name(self, prefix: str) -> str:
+        if prefix == "":
+            return f"{self.variable_name}-create_item"
+        else:
+            return f"{prefix}-{self.variable_name}-create_item"
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
-        return []
+        all_pairs = []
+        for idx, i in enumerate(self.items):
+            lst = i.generate_tool_functions(prefix=f"{prefix}-{idx}")
+            all_pairs += lst
+        all_pairs += self.generate_create_function(prefix=prefix)
+        return all_pairs
 
 
 class NestedField(Field, ABC):

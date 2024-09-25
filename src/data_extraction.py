@@ -14,6 +14,9 @@ class DataExtractor:
         self.model = data_obj
         load_dotenv()
         self.client = OpenAI()
+        self._refresh_tools()
+
+    def _refresh_tools(self):
         tools = self.model.generate_tool_functions()
         self.function_lib = {}
 
@@ -23,6 +26,7 @@ class DataExtractor:
         self.tool_descriptions = [i.llm_description for i in tools]
 
     def update_data(self, messages: List[Dict]):
+        self._refresh_tools()
         response = self.client.chat.completions.create(
             model="gpt-4o",
             messages=messages,
