@@ -12,12 +12,19 @@ class FunctionDescriptionPair:
 
 
 class Field(ABC, BaseModel):
-    name: str
+    variable_name: str
     description: str
 
     @abstractmethod
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         pass
+
+
+class ListField(Field):
+    items: List[Field]
+
+    def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
+        return []
 
 
 class NestedField(Field, ABC):
@@ -31,7 +38,7 @@ class NestedField(Field, ABC):
                     getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
-                        prefix=prefix + "-" + self.name
+                        prefix=prefix + "-" + self.variable_name
                     )
                     all_functions += sub_functions
         return all_functions
@@ -48,9 +55,9 @@ class ValueField(Field, ABC):
 
     def setter_name(self, prefix) -> str:
         if not prefix:
-            return f"{self.name}-set_value"
+            return f"{self.variable_name}-set_value"
         else:
-            return f"{prefix}-{self.name}-set_value"
+            return f"{prefix}-{self.variable_name}-set_value"
 
     @abstractmethod
     def data_type(self) -> str:
@@ -61,16 +68,16 @@ class ValueField(Field, ABC):
             "type": "function",
             "function": {
                 "name": self.setter_name(prefix),
-                "description": f"Update the {self.name}",
+                "description": f"Update the {self.variable_name}",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "val": {
                             "type": self.data_type(),
-                            "description": f"the new {self.name}",
+                            "description": f"the new {self.variable_name}",
                         },
                     },
-                    "required": [self.name],
+                    "required": [self.variable_name],
                 },
             },
         }
@@ -91,14 +98,14 @@ class StringField(ValueField):
 class IntField(ValueField):
     value: Optional[int]
 
-    def data_type(self) -> int:
+    def data_type(self) -> str:
         return "int"
 
 
 class BoolField(ValueField):
     value: Optional[bool]
 
-    def data_type(self) -> bool:
+    def data_type(self) -> str:
         return "bool"
 
 
@@ -138,10 +145,7 @@ class AbstractAppConfig(ABC, BaseModel):
         return all_functions
 
 
-# TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
-
-
-class OPCUATagConfig(AbstractAppConfig):
+class OPCUATagConfig(NestedField):
     name: StringField
     address: StringField
     dataType: StringField
@@ -152,11 +156,23 @@ class OPCUATagConfig(AbstractAppConfig):
     comments: StringField
 
 
-class OPCUADatapointConfig(AbstractAppConfig):
-    name: StringField
-    tags: List[OPCUATagConfig]
-    OPCUAUrl: IPField
-    portNumber: IntField
+class OPCUADatapointConfig(NestedField):
+    name: StringField = StringField(
+        variable_name="Name",
+        description="The name of the corresponding OPC UA Server.",
+        value=None,
+    )
+    tags: List[OPCUATagConfig] = []
+    OPCUAUrl: StringField = StringField(
+        variable_name="OPC-UA_URL",
+        description="The URL of the corresponding OPC UA Server.",
+        value=None,
+    )
+    portNumber: IntField = IntField(
+        variable_name="Port_number",
+        description="The port number from which the data of OPC UA Server will be sent.",
+        value=None,
+    )
     # TODO: Create separate field types for fields below cause they are in fact enums
     authenticationMode: IntField
     encryptionMode: IntField
@@ -175,17 +191,17 @@ class DocumentationUAConnectorConfig(AbstractAppConfig):
 
 class UAConnectorConfig(AbstractAppConfig):
     nameField: StringField = StringField(
-        name="Name",
+        variable_name="Name",
         description="The name of the corresponding OPC UA Server.",
         value=None,
     )
     urlField: StringField = StringField(
-        name="OPC-UA_URL",
+        variable_name="OPC-UA_URL",
         description="The URL of the corresponding OPC UA Server.",
         value=None,
     )
     portField: PortField = PortField(
-        name="Port_number",
+        variable_name="Port_number",
         description="The port number from which the data of OPC UA Server will be sent.",
         value=None,
     )
@@ -242,11 +258,3 @@ class App:
             self.application_description,
             self.config.generate_prompt_string(),
         )
-
-    datapoints: List[
-        OPCUADatapointConfig
-    ]  # For S7, S7Plus change to collection of lists
-    dbservicename: StringField
-    # TODO: Maybe move authentication data somewhere else?
-    username: StringField
-    password: StringField
