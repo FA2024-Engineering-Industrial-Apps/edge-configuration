@@ -1,6 +1,6 @@
-# Streamlit Vehicle Configurator
+# Edge Configuration
 
-A simple "Hello World" to build a vehicle configuration via a chatbot.
+A chatbot that helps you with configuring your industrial edge platform
 
 ## Local install
 
@@ -11,4 +11,4 @@ A simple "Hello World" to build a vehicle configuration via a chatbot.
 
 - Build image `docker build -t edge-hello-world .`
 - Run container `docker run -p 8501:8501 edge-hello-world`
-- Open "http://0.0.0.0:8501" in your Browser
+- Open [0.0.0.0:8501](http://0.0.0.0:8501) in your Browser
