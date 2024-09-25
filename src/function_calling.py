@@ -1,6 +1,6 @@
 from iem_model import AbstractAppConfig, StringField, NestedField, ListField
 from data_extraction import DataExtractor
-from llm_service import Mistral7b
+from llm_service import Mistral7b, Qwen25, Groq
 
 
 class AuthenticationData(NestedField):
@@ -45,7 +45,7 @@ class UserData(AbstractAppConfig):
 
 dataObj = UserData()
 
-extractor = DataExtractor(dataObj)
+extractor = DataExtractor(dataObj, llm=Groq())
 
 messages = [
     {

@@ -105,3 +105,51 @@ class Mistral7b(LLM):
 
         self.system_prompt = system_prompt
         self.model_name = "mistral-7b-instruct"
+
+
+class Qwen25(LLM):
+
+    def __init__(self, system_prompt: str = ""):
+        self.client = OpenAI(
+            base_url="http://workstation.ferienakademie.de:11434/v1",
+            api_key="ollama",
+        )
+
+        self.system_prompt = system_prompt
+        self.model_name = "qwen2.5:32b"
+
+
+class Groq(LLM):
+
+    def __init__(self, system_prompt: str = ""):
+        self.client = OpenAI(
+            base_url="http://workstation.ferienakademie.de:11434/v1",
+            api_key="ollama",
+        )
+
+        self.system_prompt = system_prompt
+        self.model_name = "llama3-groq-tool-use"
+
+
+class Llama3(LLM):
+
+    def __init__(self, system_prompt: str = ""):
+        self.client = OpenAI(
+            base_url="http://workstation.ferienakademie.de:11434/v1",
+            api_key="ollama",
+        )
+
+        self.system_prompt = system_prompt
+        self.model_name = "llama3.1"
+
+
+class Gemma2(LLM):
+
+    def __init__(self, system_prompt: str = ""):
+        self.client = OpenAI(
+            base_url="http://workstation.ferienakademie.de:11434/v1",
+            api_key="ollama",
+        )
+
+        self.system_prompt = system_prompt
+        self.model_name = "gemma2:27b"
