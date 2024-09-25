@@ -1,25 +1,41 @@
-from iem_model import AbstractAppConfig, StringField, NestedField
+from iem_model import AbstractAppConfig, StringField, NestedField, ListField
 from data_extraction import DataExtractor
 
 
 class AuthenticationData(NestedField):
     username: StringField = StringField(
-        name="username", description="the username of the user", value=None
+        variable_name="username", description="the username of the user", value=None
     )
 
     password: StringField = StringField(
-        name="password", description="the users password", value=None
+        variable_name="password", description="the users password", value=None
+    )
+
+
+class ContactInformation(NestedField):
+    phone_number: StringField = StringField(
+        variable_name="phone_number",
+        description="the phone number of the user",
+        value=None,
+    )
+
+    address: StringField = StringField(
+        variable_name="address", description="the address of the user", value=None
+    )
+
+
+class ContactList(ListField):
+    blueprint: ContactInformation = ContactInformation(
+        variable_name="Contact_Information",
+        description="The contact information of multiple user",
     )
 
 
 # Look for default function signatures
 class UserData(AbstractAppConfig):
-    auth_data: AuthenticationData = AuthenticationData(
-        name="authenticationdata", description="data for user auth"
-    )
-
-    email: StringField = StringField(
-        name="email", description="The email of the user", value=None
+    contacts: ContactList = ContactList(variable_name="contacts", description="The contact list")  # type: ignore
+    name: StringField = StringField(
+        variable_name="name", description="The name of the user", value=None
     )
 
     def generate_prompt_string(self):
@@ -33,10 +49,19 @@ extractor = DataExtractor(dataObj)
 messages = [
     {
         "role": "user",
-        "content": "I want to update my name to 'Niclas' and email to 'mymy@py.co' and password 123banana",
+        "content": "The name of the user is John Doe and he has 2 contacts.",
     }
 ]
 
 extractor.update_data(messages)
+
+messages_2 = [
+    {
+        "role": "user",
+        "content": "The phone number of the first contact is 1234567890 and the address is 1234 Elm Street. For the second contact I only know the phone number which is 0987654321.",
+    }
+]
+
+extractor.update_data(messages_2)
 
 print(dataObj)

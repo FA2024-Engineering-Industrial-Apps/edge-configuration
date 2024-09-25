@@ -1,7 +1,6 @@
 import streamlit as st
 import os
-from strategy import VehicleStrategy, EdgeDeviceStrategy, Strategy, EdgeConfigStrategy
-from iem_api_client import create_device
+from strategy import Strategy, EdgeConfigStrategy
 
 st.title("Configuration Generator")
 
@@ -29,7 +28,8 @@ if prompt := st.chat_input("Write something"):
     pydantic_out = strategy.send_message(prompt, st.session_state.messages)
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.messages.append({"role": "assistant", "content": pydantic_out})
-    st.chat_message("assistant").markdown(f"""
+    st.chat_message("assistant").markdown(
+        f"""
         ```javascript
         {pydantic_out}
         """

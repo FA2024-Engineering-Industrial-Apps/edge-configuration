@@ -28,13 +28,16 @@ def retrieve_model(prompt: str, model: AbstractAppConfig, history: list) -> str:
             messages.append(element)
         messages.append({"role": "user", "content": prompt})
         print(messages)
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages
-        )
+        response = client.chat.completions.create(model="gpt-4o", messages=messages)
         data_extractor.update_data(messages)
         print(model)
-        history.append({"role": "system", "content": "The current configuration is: " + model.generate_prompt_string()})
+        history.append(
+            {
+                "role": "system",
+                "content": "The current configuration is: "
+                + model.generate_prompt_string(),
+            }
+        )
 
         return response.choices[0].message.content.strip()
 
@@ -63,10 +66,7 @@ def retrieve_model(prompt: str, model: AbstractAppConfig, history: list) -> str:
             response = client.chat.completions.create(
                 model="mistral-7b-instruct",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": f"{instructions}"
-                    },
+                    {"role": "system", "content": f"{instructions}"},
                     {"role": "user", "content": prompt},
                 ],
             )
