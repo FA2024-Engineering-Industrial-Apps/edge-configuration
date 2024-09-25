@@ -14,13 +14,19 @@ strategy: Strategy = None  # type: ignore
 
 if target == "Edge Config":
     strategy = EdgeConfigStrategy()
+
+
     if "messages" not in st.session_state:
         st.session_state.messages = []
-    for message in st.session_state.messages:
-        if message["role"] == "system":
-            continue
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        # Create two columns: left for chat, right for displaying parameters or updates
+
+
+        for message in st.session_state.messages:
+            if message["role"] == "system":
+                continue
+
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
 if prompt := st.chat_input("Write something"):
     with st.chat_message("user"):
@@ -34,6 +40,14 @@ if prompt := st.chat_input("Write something"):
         {pydantic_out}
         """
     )
+
+ # Display parameters or updates
+    with st.sidebar:
+        st.subheader("Configuration Parameters")
+        st.markdown("Name")
+        st.markdown("OPC-UA URL")
+        st.markdown("Port number")
+
 
 
 st.divider()
