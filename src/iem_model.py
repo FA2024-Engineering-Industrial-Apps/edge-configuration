@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Callable, Optional
 from typing_extensions import Unpack
 from pydantic.dataclasses import dataclass
 from pydantic import BaseModel, ConfigDict
+import validators
 
 
 @dataclass
@@ -160,13 +161,41 @@ class BoolField(ValueField):
 
 
 class IPField(StringField):
-    pass
+
+    def validate_value(self) -> bool:
+        return validators.ipv4(self.value) == True or validators.ipv6(self.value) == True
+                
+
+class IPv4Field(IPField):
+    
+    def validate_value(self) -> bool:
+            return validators.ipv4(self.value) == True
+
+
+class IPv6Field(IPField):
+
+    def validate_value(self) -> bool:
+        return validators.ipv6(self.value) == True
 
 
 class PortField(IntField):
-    pass
+    
+    def validate_value(self) -> bool:
+        return 0 <= self.value <= 65535
+    
 
+class EmailField(StringField):
 
+    def validate_value(self) -> bool:
+        return validators.email(self.value) == True
+    
+    
+class UrlField(StringField):
+
+    def validate_value(self) -> bool:
+        return validators.url(self.value) == True
+    
+    
 class AbstractAppConfig(ABC, BaseModel):
 
     @abstractmethod
