@@ -109,32 +109,11 @@ class BoolField(ValueField):
         return "bool"
 
 
-class IntField(ValueField):
-    value: Optional[int]
-
-    def data_type(self) -> str:
-        return "int"
-
-
-class BoolField(ValueField):
-    value: Optional[bool]
-
-    def data_type(self) -> str:
-        return "bool"
-
-
 class IPField(StringField):
     pass
 
 
-class IntegerField(ValueField):
-    value: Optional[int]
-
-    def data_type(self) -> str:
-        return "integer"
-
-
-class PortField(IntegerField):
+class PortField(IntField):
     pass
 
 
@@ -160,28 +139,6 @@ class AbstractAppConfig(ABC, BaseModel):
 
 
 # TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
-
-
-class OPCUATagConfig(AbstractAppConfig):
-    name: StringField
-    address: StringField
-    dataType: StringField
-    acquisitionCycle: IntField
-    acquisitionMode: StringField
-    isArrayTypeTag: BoolField
-    accessMode: StringField
-    comments: StringField
-
-
-class OPCUADatapointConfig(AbstractAppConfig):
-    name: StringField
-    tags: List[OPCUATagConfig]
-    OPCUAUrl: IPField
-    portNumber: IntField
-    # TODO: Create separate field types for fields below cause they are in fact enums
-    authenticationMode: IntField
-    encryptionMode: IntField
-    securityPolicy: IntField
 
 
 class OPCUATagConfig(NestedField):
