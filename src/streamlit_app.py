@@ -1,7 +1,6 @@
 import streamlit as st
 import os
-from strategy import VehicleStrategy, EdgeDeviceStrategy, Strategy, EdgeConfigStrategy
-from iem_api_client import create_device
+from strategy import Strategy, EdgeConfigStrategy
 
 st.title("Configuration Generator")
 
@@ -9,34 +8,32 @@ st.markdown(
     "Configure your LLM Access in the input below and write your description in the chat input. The assistant will generate a configuration for you."
 )
 
-target = st.radio("Target", ["Vehicle", "Edge Device", "Edge Config"])
+target = st.radio("Target", ["Edge Config"])
 
 strategy: Strategy = None  # type: ignore
 
-if target == "Vehicle":
-    strategy = VehicleStrategy()  # type: ignore
 if target == "Edge Config":
     strategy = EdgeConfigStrategy()
-else:
-    strategy = EdgeDeviceStrategy()
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    for message in st.session_state.messages:
+        if message["role"] == "system":
+            continue
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-if prompt := st.chat_input("Describe the recipe you want to configure"):
-    st.chat_message("user").markdown(prompt)
-    pydantic_out = strategy.create_product(prompt)
-    st.chat_message("assistant").markdown(f"""
+if prompt := st.chat_input("Write something"):
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    pydantic_out = strategy.send_message(prompt, st.session_state.messages)
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "assistant", "content": pydantic_out})
+    st.chat_message("assistant").markdown(
+        f"""
         ```javascript
         {pydantic_out}
         """
     )
-    if target == "Edge Device":
-
-        def create_device_click():
-            st.write("IEM API Response:")
-            st.write(create_device(pydantic_out))
-
-        create_btn = st.button(
-            "Create Device", on_click=create_device_click, key="create_device_btn"
-        )
 
 
 st.divider()

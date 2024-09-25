@@ -15,29 +15,29 @@ def describe_options(enum_class):
     return f"Available options: {', '.join(options)}"
 
 
-def retrieve_model(prompt: str, model: AbstractAppConfig, instructions: str) -> str:
+def retrieve_model(prompt: str, model: AbstractAppConfig, history: list) -> str:
     if st.session_state.get("model") == "gpt-4o":
         load_dotenv()
         client = instructor.patch(OpenAI())
         data_extractor = DataExtractor(model)
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"{instructions}",
-                },
-                {"role": "user", "content": prompt},
-            ],
-        )
-        tool_response = data_extractor.update_data([
-                {
-                    "role": "system",
-                    "content": f"{instructions}",
-                },
-                {"role": "user", "content": prompt},
-            ])
+        system_prompt = history[0]
+        messages = [system_prompt]
+        for element in history[-3:]:
+            if element == system_prompt:
+                continue
+            messages.append(element)
+        messages.append({"role": "user", "content": prompt})
+        print(messages)
+        response = client.chat.completions.create(model="gpt-4o", messages=messages)
+        data_extractor.update_data(messages)
         print(model)
+        history.append(
+            {
+                "role": "system",
+                "content": "The current configuration is: "
+                + model.generate_prompt_string(),
+            }
+        )
 
         return response.choices[0].message.content.strip()
 
@@ -66,10 +66,7 @@ def retrieve_model(prompt: str, model: AbstractAppConfig, instructions: str) -> 
             response = client.chat.completions.create(
                 model="mistral-7b-instruct",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": f"{instructions}"
-                    },
+                    {"role": "system", "content": f"{instructions}"},
                     {"role": "user", "content": prompt},
                 ],
             )
