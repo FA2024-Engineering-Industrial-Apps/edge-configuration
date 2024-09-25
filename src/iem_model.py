@@ -43,6 +43,9 @@ class ValueField(Field, ABC):
     def set_value(self, val: Any):
         self.value = val
 
+    def get_value(self):
+        return self.value
+
     def validate_value(self) -> bool:
         return True
 
@@ -52,12 +55,18 @@ class ValueField(Field, ABC):
         else:
             return f"{prefix}-{self.name}-set_value"
 
+    def getter_name(self, prefix) -> str:
+        if not prefix:
+            return f"{self.name}-get_value"
+        else:
+            return f"{prefix}-{self.name}-get_value"
+
     @abstractmethod
     def data_type(self) -> str:
         pass
 
-    def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
-        dct = {
+    def generate_tool_functions(self, prefix="") -> list[FunctionDescriptionPair]:
+        set_dct = {
             "type": "function",
             "function": {
                 "name": self.setter_name(prefix),
@@ -74,9 +83,24 @@ class ValueField(Field, ABC):
                 },
             },
         }
+        get_dct = {
+            "type": "function",
+            "function": {
+                "name": self.getter_name(prefix),
+                "description": f"Gets the current value from {self.name}",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "required": [self.name],
+                },
+            },
+        }
         return [
             FunctionDescriptionPair(
-                name=self.setter_name(prefix), fct=self.set_value, llm_description=dct
+                name=self.setter_name(prefix), fct=self.set_value, llm_description=set_dct
+            ),
+            FunctionDescriptionPair(
+                name=self.getter_name(prefix), fct=self.get_value, llm_description=get_dct
             )
         ]
 
@@ -150,21 +174,24 @@ class UAConnectorConfig(AbstractAppConfig):
             {{
                 name: {0},
                 description: {1},
+                value: {2},
             }},
             {{
-                name: {2},
-                description: {3},
+                name: {3},
+                description: {4},
+                value: {5},
             }},
             {{
-                name: {4},
-                description: {5},
+                name: {6},
+                description: {7},
+                value: {8},
             }}
         ]
         """
         return string.format(
-            self.nameField.name, self.nameField.description,
-            self.urlField.name, self.urlField.description,
-            self.portField.name, self.portField.description
+            self.nameField.name, self.nameField.description, self.nameField.value,
+            self.urlField.name, self.urlField.description, self.urlField.value,
+            self.portField.name, self.portField.description, self.portField.value
         )
 
 

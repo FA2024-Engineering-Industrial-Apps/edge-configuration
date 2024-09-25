@@ -20,9 +20,10 @@ def retrieve_model(prompt: str, model: AbstractAppConfig, history: list) -> str:
         load_dotenv()
         client = instructor.patch(OpenAI())
         data_extractor = DataExtractor(model)
-        messages = [history[0]]
-        for element in history[-2:]:
-            if element["role"] == "system":
+        system_prompt = history[0]
+        messages = [system_prompt]
+        for element in history[-3:]:
+            if element == system_prompt:
                 continue
             messages.append(element)
         messages.append({"role": "user", "content": prompt})
@@ -33,6 +34,7 @@ def retrieve_model(prompt: str, model: AbstractAppConfig, history: list) -> str:
         )
         data_extractor.update_data(messages)
         print(model)
+        history.append({"role": "system", "content": "The current configuration is: " + model.generate_prompt_string()})
 
         return response.choices[0].message.content.strip()
 
