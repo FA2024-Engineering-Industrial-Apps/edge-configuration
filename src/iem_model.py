@@ -161,7 +161,7 @@ class IntField(ValueField):
     value: Optional[int]
 
     def data_type(self) -> str:
-        return "int"
+        return "integer"
 
 
 class BoolField(ValueField):
@@ -291,13 +291,23 @@ class UAConnectorConfig(AbstractAppConfig):
         ]
         """
         return string.format(
-            self.nameField.name,
+            self.nameField.variable_name,
             self.nameField.description,
-            self.urlField.name,
+            self.nameField.value,
+            self.urlField.variable_name,
             self.urlField.description,
-            self.portField.name,
+            self.urlField.value,
+            self.portField.variable_name,
             self.portField.description,
+            self.portField.value,
         )
+
+
+class DatabusUserConfig(UAConnectorConfig):
+    pass
+
+class DatabusConfig(AbstractAppConfig):
+    pass
 
 
 # class containing all data of an app including its Config
