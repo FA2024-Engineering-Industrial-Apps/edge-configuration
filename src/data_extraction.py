@@ -3,20 +3,21 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from iem_model import AbstractAppConfig
 import json
+from llm_service import LLM, GPT4o
 
 
 class DataExtractor:
 
     model: AbstractAppConfig
-    client: OpenAI
+    client: LLM
 
-    def __init__(self, data_obj: AbstractAppConfig):
+    def __init__(self, data_obj: AbstractAppConfig, llm=GPT4o()):
         self.model = data_obj
-        load_dotenv()
-        self.client = OpenAI()
+        self.client = llm
         self._refresh_tools()
 
     def _refresh_tools(self):
+
         tools = self.model.generate_tool_functions()
         self.function_lib = {}
 
@@ -28,17 +29,10 @@ class DataExtractor:
 
     def update_data(self, messages: List[Dict]):
         self._refresh_tools()
-        # calling GPT with the messanges and tool_descriptions / llm_descriptions of all functions
-        response = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-            tools=self.tool_descriptions,
-            tool_choice="auto",
-        )  # type: ignore
 
-        # extracting the text respones and function calls answered by GPT
-        response_message = response.choices[0].message
-        tool_calls = response_message.tool_calls
+        response_pair = self.client.prompt_tool(messages, self.tool_descriptions)
+        # response_message = response_pair.response
+        tool_calls = response_pair.tool_calls
 
         if not tool_calls:
             return

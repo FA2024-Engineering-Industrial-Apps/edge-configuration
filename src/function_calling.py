@@ -1,5 +1,6 @@
 from iem_model import AbstractAppConfig, StringField, NestedField, ListField
 from data_extraction import DataExtractor
+from llm_service import Mistral7b
 
 
 class AuthenticationData(NestedField):
