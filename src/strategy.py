@@ -12,7 +12,7 @@ from iem_model import App, UAConnectorConfig
 class Strategy(ABC):
 
     @abstractmethod
-    def create_product(self, prompt: str) -> BaseModel:
+    def send_message(self, prompt: str, history: list) -> str:
         pass
 
 
@@ -43,7 +43,7 @@ class VehicleStrategy(ABC):
 
 class EdgeDeviceStrategy(Strategy):
 
-    def create_product(self, prompt: str) -> DeviceModel:
+    def send_message(self, prompt: str) -> DeviceModel:
         return retrieve_model(
             prompt,
             DeviceModel,  # type: ignore
@@ -86,12 +86,17 @@ Ask the user for the values, and answer his questions about the apps and the fie
         }}
         """.format(opc_ua_connector.generate_prompt_string())
 
-    def create_product(self, prompt: str) -> str:
-        adapted_system_prompt = self.system_prompt.format(self.create_app_overview())
-        print(adapted_system_prompt)
-        config_object = UAConnectorConfig()
+    config_object = UAConnectorConfig()
+
+    def send_message(self, prompt: str, history: list) -> str:
+        # print(history)
+        if not history:
+            adapted_system_prompt = self.system_prompt.format(self.create_app_overview())
+            history.append({"role": "system", "content": adapted_system_prompt})
+            # print(adapted_system_prompt)
+            # print(history)
         return retrieve_model(
             prompt,
-            config_object,
-            adapted_system_prompt
+            self.config_object,
+            history
         )

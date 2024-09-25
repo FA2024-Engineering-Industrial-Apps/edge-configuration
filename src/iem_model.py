@@ -12,6 +12,7 @@ class FunctionDescriptionPair:
     llm_description: Dict
 
 
+# most general definition of a Field
 class Field(ABC, BaseModel):
     variable_name: str
     description: str
@@ -77,44 +78,62 @@ class ListField(Field):
         return all_pairs
 
 
+# general definition of a Field containing other Fields
 class NestedField(Field, ABC):
 
+    # generating a list containing all FunctionDescriptionPairs in all subfields of the nested field
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         all_functions = []
-        for field_name, field_type in self.__dict__.items():
-            field_value = getattr(self, field_name)
+        for field_name, field_value in self.__dict__.items():
+
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
                     getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
-                        prefix=prefix + "-" + self.variable_name
+                        prefix=prefix
+                        + "-"
+                        + self.variable_name
+                        # Example: results in subfield1.generate_tool_functions("-" + nestedField1.name)
+                        # Case distinction necessary if prefix = "" ?????????????
                     )
                     all_functions += sub_functions
         return all_functions
 
 
+# general definition of a field containing a single value
 class ValueField(Field, ABC):
     value: Any
 
     def set_value(self, val: Any):
         self.value = val
 
+    def get_value(self):
+        return self.value
+
     def validate_value(self) -> bool:
         return True
 
+    # returns a senseful name of the set_value function used for the llm description
     def setter_name(self, prefix) -> str:
         if not prefix:
             return f"{self.variable_name}-set_value"
         else:
             return f"{prefix}-{self.variable_name}-set_value"
 
+    def getter_name(self, prefix) -> str:
+        if not prefix:
+            return f"{self.variable_name}-get_value"
+        else:
+            return f"{prefix}-{self.variable_name}-get_value"
+
     @abstractmethod
     def data_type(self) -> str:
         pass
 
+    # returns a list containing the FunctionDescriptionPairs of the ValueField
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
-        dct = {
+        set_dct = {
             "type": "function",
             "function": {
                 "name": self.setter_name(prefix),
@@ -131,10 +150,29 @@ class ValueField(Field, ABC):
                 },
             },
         }
+        get_dct = {
+            "type": "function",
+            "function": {
+                "name": self.getter_name(prefix),
+                "description": f"Gets the current value from {self.variable_name}",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "required": [self.variable_name],
+                },
+            },
+        }
         return [
             FunctionDescriptionPair(
-                name=self.setter_name(prefix), fct=self.set_value, llm_description=dct
-            )
+                name=self.setter_name(prefix),
+                fct=self.set_value,
+                llm_description=set_dct,
+            ),
+            FunctionDescriptionPair(
+                name=self.getter_name(prefix),
+                fct=self.get_value,
+                llm_description=get_dct,
+            ),
         ]
 
 
@@ -167,16 +205,17 @@ class PortField(IntField):
     pass
 
 
+# general definition an AppConfig - a datastructure containing the data for a certain configuration of an app
 class AbstractAppConfig(ABC, BaseModel):
 
     @abstractmethod
     def generate_prompt_string(self):
         pass
 
+    # returns a list containing the FunctionDescriptionPairs of all Fields and Subfields of the AppConfig
     def generate_tool_functions(self) -> List[FunctionDescriptionPair]:
         all_functions = []
-        for field_name, field_type in self.__dict__.items():
-            field_value = getattr(self, field_name)
+        for field_name, field_value in self.__dict__.items():
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
                     getattr(field_value, "generate_tool_functions")
@@ -235,6 +274,7 @@ class DocumentationUAConnectorConfig(AbstractAppConfig):
     password: StringField
 
 
+# definition of the UAConnector Config containing all data for the configuration of a UA Connector
 class UAConnectorConfig(AbstractAppConfig):
     nameField: StringField = StringField(
         variable_name="Name",
@@ -252,6 +292,7 @@ class UAConnectorConfig(AbstractAppConfig):
         value=None,
     )
 
+    # Using the defaul __init__() method of the AbstractAppConfig class with the values given in a dictionary
     def __init__(self, /, **data: Any):
         super().__init__(**data)
 
@@ -261,14 +302,17 @@ class UAConnectorConfig(AbstractAppConfig):
             {{
                 name: {0},
                 description: {1},
+                value: {2},
             }},
             {{
-                name: {2},
-                description: {3},
+                name: {3},
+                description: {4},
+                value: {5},
             }},
             {{
-                name: {4},
-                description: {5},
+                name: {6},
+                description: {7},
+                value: {8},
             }}
         ]
         """
@@ -282,6 +326,7 @@ class UAConnectorConfig(AbstractAppConfig):
         )
 
 
+# class containing all data of an app including its Config
 class App:
     application_name: str
     application_description: str
