@@ -1,13 +1,20 @@
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic.dataclasses import dataclass
 import instructor
 from openai import OpenAI
+from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
+import os
 import streamlit as st
 from enum import Enum
 import json
+from error_handling import LLMInteractionException
 
 from data_extraction import DataExtractor
 from iem_model import AbstractAppConfig
+from abc import ABC, abstractmethod
+from typing import List, Dict, Optional
+
+load_dotenv()
 
 
 def describe_options(enum_class):
