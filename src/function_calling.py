@@ -45,6 +45,12 @@ class UserData(AbstractAppConfig):
 
 dataObj = UserData()
 
+print(dataObj.describe())
+
+print("\n---\n")
+
+print(dataObj.to_json())
+
 extractor = DataExtractor(dataObj)
 
 messages = [
@@ -65,4 +71,8 @@ messages_2 = [
 
 extractor.update_data(messages_2)
 
-print(dataObj)
+print(dataObj.describe())
+
+print("\n---\n")
+
+print(dataObj.to_json())

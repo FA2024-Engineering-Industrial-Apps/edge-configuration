@@ -17,7 +17,9 @@ class FunctionDescriptionPair:
 class Field(ABC, BaseModel):
     variable_name: str
     description: str
+
     setter_active: bool = True
+    visible: bool = True
 
     @abstractmethod
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
@@ -27,7 +29,23 @@ class Field(ABC, BaseModel):
         self.setter_active = False
 
     def activate_setter(self):
-        self.setter_active = True
+        if self.visible:
+            self.setter_active = True
+
+    def set_visible(self):
+        self.visible = True
+
+    def set_invisible(self):
+        self.visible = False
+        self.setter_active = False
+
+    @abstractmethod
+    def describe(self) -> Dict:
+        pass
+
+    @abstractmethod
+    def to_json(self) -> Dict:
+        pass
 
 
 class ListField(Field):
@@ -100,6 +118,22 @@ class ListField(Field):
         for i in self.items:
             i.activate_setter()
 
+    def describe(self) -> Dict:
+        if self.visible:
+            return {
+                "name": self.variable_name,
+                "description": self.description,
+                "items": [item.describe() for item in self.items if item.visible],
+            }
+        else:
+            return {}
+
+    def to_json(self) -> Dict:
+        if self.visible:
+            return {"value": [i.to_json()["value"] for i in self.items]}
+        else:
+            return {}
+
 
 # general definition of a Field containing other Fields
 class NestedField(Field, ABC):
@@ -140,6 +174,32 @@ class NestedField(Field, ABC):
                     getattr(field_value, "activate_sette")
                 ):
                     getattr(field_value, "activate_setter")()
+
+    def describe(self) -> Dict:
+        base: Dict = {}
+        if not self.visible:
+            return base
+
+        base["variable_name"] = self.variable_name
+        base["description"] = self.description
+
+        for field_name, field_value in self.__dict__.items():
+            if isinstance(field_value, Field):
+                if field_value.visible:
+                    base[field_name] = field_value.describe()
+        return base
+
+    def to_json(self) -> Dict:
+        if not self.visible:
+            return {"value": {}}
+
+        base: Dict = {}
+
+        for field_name, field_value in self.__dict__.items():
+            if isinstance(field_value, Field):
+                if field_value.visible:
+                    base[field_name] = field_value.to_json()["value"]
+        return {"value": base}
 
 
 # general definition of a field containing a single value
@@ -192,6 +252,22 @@ class ValueField(Field, ABC):
             )
         ]
 
+    def describe(self) -> Dict:
+        if self.visible:
+            return {
+                "variable_name": self.variable_name,
+                "description": self.description,
+                "value": self.value,
+            }
+        else:
+            return {}
+
+    def to_json(self) -> Dict:
+        if self.visible:
+            return {"value": self.value}
+        else:
+            return {}
+
 
 class StringField(ValueField):
     value: Optional[str]
@@ -237,7 +313,7 @@ class IPv6Field(IPField):
 class PortField(IntField):
 
     def validate_value(self) -> bool:
-        return 0 <= self.value <= 65535
+        return 0 <= self.value <= 65535  # type: ignore
 
 
 class EmailField(StringField):
@@ -271,6 +347,22 @@ class AbstractAppConfig(ABC, BaseModel):
                     )
                     all_functions += sub_functions
         return all_functions
+
+    def describe(self) -> Dict:
+        base: Dict = {}
+        for field_name, field_value in self.__dict__.items():
+            if isinstance(field_value, Field):
+                if field_value.visible:
+                    base[field_name] = field_value.describe()
+        return base
+
+    def to_json(self) -> Dict:
+        base: Dict = {}
+        for field_name, field_value in self.__dict__.items():
+            if isinstance(field_value, Field):
+                if field_value.visible:
+                    base[field_name] = field_value.to_json()["value"]
+        return base
 
 
 # TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
