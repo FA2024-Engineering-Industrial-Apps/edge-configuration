@@ -45,7 +45,7 @@ class UserData(AbstractAppConfig):
 
 dataObj = UserData()
 
-extractor = DataExtractor(dataObj, llm=Groq())
+extractor = DataExtractor(dataObj)
 
 messages = [
     {

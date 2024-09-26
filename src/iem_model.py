@@ -17,14 +17,22 @@ class FunctionDescriptionPair:
 class Field(ABC, BaseModel):
     variable_name: str
     description: str
+    setter_active: bool = True
 
     @abstractmethod
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         pass
 
+    def deactivate_setter(self):
+        self.setter_active = False
+
+    def activate_setter(self):
+        self.setter_active = True
+
 
 class ListField(Field):
     items: List[Field] = []
+    create_item_active: bool = True
 
     blueprint: Field
 
@@ -41,6 +49,8 @@ class ListField(Field):
         return type(self.blueprint).__name__
 
     def generate_create_function(self, prefix="") -> List[FunctionDescriptionPair]:
+        if not self.create_item_active:
+            return []
         name = self.create_item_name(prefix)
         fct = self.create_item
         llm_description = {
@@ -78,6 +88,14 @@ class ListField(Field):
         all_pairs += self.generate_create_function(prefix=prefix)
         return all_pairs
 
+    def deactivate_setter(self):
+        for i in self.items:
+            i.deactivate_setter()
+
+    def activate_setter(self):
+        for i in self.items:
+            i.activate_setter()
+
 
 # general definition of a Field containing other Fields
 class NestedField(Field, ABC):
@@ -100,6 +118,24 @@ class NestedField(Field, ABC):
                     )
                     all_functions += sub_functions
         return all_functions
+
+    def deactivate_setter(self):
+        for _, field_value in self.__dict__.items():
+
+            if isinstance(field_value, Field):
+                if hasattr(field_value, "deactivate_setter") and callable(
+                    getattr(field_value, "deactivate_setter")
+                ):
+                    getattr(field_value, "deactivate_setter")()
+
+    def activate_setter(self):
+        for _, field_value in self.__dict__.items():
+
+            if isinstance(field_value, Field):
+                if hasattr(field_value, "activate_sette") and callable(
+                    getattr(field_value, "activate_sette")
+                ):
+                    getattr(field_value, "activate_setter")()
 
 
 # general definition of a field containing a single value
@@ -125,6 +161,8 @@ class ValueField(Field, ABC):
 
     # returns a list containing the FunctionDescriptionPairs of the ValueField
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
+        if not self.setter_active:
+            return []
         set_dct = {
             "type": "function",
             "function": {
@@ -175,13 +213,15 @@ class BoolField(ValueField):
 class IPField(StringField):
 
     def validate_value(self) -> bool:
-        return validators.ipv4(self.value) == True or validators.ipv6(self.value) == True
-                
+        return (
+            validators.ipv4(self.value) == True or validators.ipv6(self.value) == True
+        )
+
 
 class IPv4Field(IPField):
-    
+
     def validate_value(self) -> bool:
-            return validators.ipv4(self.value) == True
+        return validators.ipv4(self.value) == True
 
 
 class IPv6Field(IPField):
@@ -191,23 +231,23 @@ class IPv6Field(IPField):
 
 
 class PortField(IntField):
-    
+
     def validate_value(self) -> bool:
         return 0 <= self.value <= 65535
-    
+
 
 class EmailField(StringField):
 
     def validate_value(self) -> bool:
         return validators.email(self.value) == True
-    
-    
+
+
 class UrlField(StringField):
 
     def validate_value(self) -> bool:
         return validators.url(self.value) == True
-    
-    
+
+
 class AbstractAppConfig(ABC, BaseModel):
 
     @abstractmethod
@@ -333,6 +373,7 @@ class UAConnectorConfig(AbstractAppConfig):
 
 class DatabusUserConfig(UAConnectorConfig):
     pass
+
 
 class DatabusConfig(AbstractAppConfig):
     pass
