@@ -2,7 +2,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from llm import retrieve_model
-from iem_model import App, UAConnectorConfig
+from iem_model import App, UAConnectorConfig, AbstractAppConfig
+from src.data_extraction import DataExtractor
+from src.llm_service import GPT4o
+from src.nl_service import NLService
 
 
 class Strategy(ABC):
@@ -49,15 +52,21 @@ Ask the user for the values, and answer his questions about the apps and the fie
             opc_ua_connector.generate_prompt_string()
         )
 
-    config_object = UAConnectorConfig()
+    def __init__(self):
+        adapted_system_prompt = self.system_prompt.format(
+            self.create_app_overview()
+        )
+        self.config_object = UAConnectorConfig()
+        self.nl_service = NLService(self.config_object,
+                                    GPT4o(adapted_system_prompt))
+        self.data_extractor = DataExtractor(self.config_object)
 
-    def send_message(self, prompt: str, history: list) -> str:
+    def send_message(self, prompt: str, history: list) -> (str, AbstractAppConfig):
         # print(history)
-        if not history:
-            adapted_system_prompt = self.system_prompt.format(
-                self.create_app_overview()
-            )
-            history.append({"role": "system", "content": adapted_system_prompt})
-            # print(adapted_system_prompt)
-            # print(history)
-        return retrieve_model(prompt, self.config_object, history)
+        nl_response = self.nl_service.retrieve_model(prompt, self.config_object, history)
+        self.data_extractor.update_data(history + [{
+            "role": "user",
+            "content": prompt
+        }])
+        return nl_response, self.config_object
+

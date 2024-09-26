@@ -31,22 +31,25 @@ if target == "Edge Config":
 if prompt := st.chat_input("Write something"):
     with st.chat_message("user"):
         st.markdown(prompt)
-    pydantic_out = strategy.send_message(prompt, st.session_state.messages)
+    response_message, current_model = strategy.send_message(prompt, st.session_state.messages)
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.session_state.messages.append({"role": "assistant", "content": pydantic_out})
+    st.session_state.messages.append({"role": "assistant", "content": response_message})
     st.chat_message("assistant").markdown(
         f"""
         ```javascript
-        {pydantic_out}
+        {response_message}
         """
     )
-
- # Display parameters or updates
     with st.sidebar:
         st.subheader("Configuration Parameters")
-        st.markdown("Name")
-        st.markdown("OPC-UA URL")
-        st.markdown("Port number")
+        st.markdown(current_model.generate_prompt_string())
+
+ # Display parameters or updates
+    #with st.sidebar:
+     #   st.subheader("Configuration Parameters")
+      #  st.markdown("Name")
+       # st.markdown("OPC-UA URL")
+        #st.markdown("Port number")
 
 
 
