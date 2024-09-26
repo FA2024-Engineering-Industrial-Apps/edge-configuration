@@ -42,7 +42,7 @@ if prompt := st.chat_input("Write something"):
     )
     with st.sidebar:
         st.subheader("Configuration Parameters")
-        st.markdown(current_model.generate_prompt_string())
+        st.markdown(current_model.generate_prompt_sidebar())
 
  # Display parameters or updates
     #with st.sidebar:

@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 
 from llm import retrieve_model
 from iem_model import App, UAConnectorConfig, AbstractAppConfig
-from src.data_extraction import DataExtractor
-from src.llm_service import GPT4o
-from src.nl_service import NLService
+from data_extraction import DataExtractor
+from llm_service import GPT4o
+from nl_service import NLService
 
 
 class Strategy(ABC):

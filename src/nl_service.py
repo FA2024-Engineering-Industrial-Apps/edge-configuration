@@ -1,5 +1,5 @@
-from src.iem_model import AbstractAppConfig
-from src.llm_service import GPT4o
+from iem_model import AbstractAppConfig
+from llm_service import GPT4o
 
 
 class NLService:
