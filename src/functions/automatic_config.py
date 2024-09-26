@@ -37,12 +37,12 @@ def create_configured_app():
         
         response = requests.post(
             URL + f"/batches",
-            params={"appid": OPC_UA_CONNECTOR_ID, "operation": "updateAppConfig"},
+            params={"appid": OPC_UA_CONNECTOR_ID, "operation": "installApplication"},
             files=infoMap,
             headers={"Authorization": get_token()},
         )
 
-        print(response)
+        print(response.text)
         
 
 
