@@ -83,7 +83,11 @@ class ListField(Field):
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         all_pairs = []
         for idx, i in enumerate(self.items):
-            lst = i.generate_tool_functions(prefix=f"{prefix}-{idx}")
+            if prefix:
+                new_prefix = f"{prefix}-{idx}"
+            else:
+                new_prefix = f"{idx}"
+            lst = i.generate_tool_functions(prefix=new_prefix)
             all_pairs += lst
         all_pairs += self.generate_create_function(prefix=prefix)
         return all_pairs
@@ -109,12 +113,12 @@ class NestedField(Field, ABC):
                 if hasattr(field_value, "generate_tool_functions") and callable(
                     getattr(field_value, "generate_tool_functions")
                 ):
+                    if prefix:
+                        new_prefix = prefix + "-" + self.variable_name
+                    else:
+                        new_prefix = self.variable_name
                     sub_functions = getattr(field_value, "generate_tool_functions")(
-                        prefix=prefix
-                        + "-"
-                        + self.variable_name
-                        # Example: results in subfield1.generate_tool_functions("-" + nestedField1.name)
-                        # Case distinction necessary if prefix = "" ?????????????
+                        new_prefix
                     )
                     all_functions += sub_functions
         return all_functions
