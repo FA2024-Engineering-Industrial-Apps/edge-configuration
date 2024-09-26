@@ -18,13 +18,39 @@ class Field(ABC, BaseModel):
     variable_name: str
     description: str
 
+    setter_active: bool = True
+    visible: bool = True
+
     @abstractmethod
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
+        pass
+
+    def deactivate_setter(self):
+        self.setter_active = False
+
+    def activate_setter(self):
+        if self.visible:
+            self.setter_active = True
+
+    def set_visible(self):
+        self.visible = True
+
+    def set_invisible(self):
+        self.visible = False
+        self.setter_active = False
+
+    @abstractmethod
+    def describe(self) -> Dict:
+        pass
+
+    @abstractmethod
+    def to_json(self) -> Dict:
         pass
 
 
 class ListField(Field):
     items: List[Field] = []
+    create_item_active: bool = True
 
     blueprint: Field
 
@@ -41,6 +67,8 @@ class ListField(Field):
         return type(self.blueprint).__name__
 
     def generate_create_function(self, prefix="") -> List[FunctionDescriptionPair]:
+        if not self.create_item_active:
+            return []
         name = self.create_item_name(prefix)
         fct = self.create_item
         llm_description = {
@@ -73,10 +101,38 @@ class ListField(Field):
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         all_pairs = []
         for idx, i in enumerate(self.items):
-            lst = i.generate_tool_functions(prefix=f"{prefix}-{idx}")
+            if prefix:
+                new_prefix = f"{prefix}-{idx}"
+            else:
+                new_prefix = f"{idx}"
+            lst = i.generate_tool_functions(prefix=new_prefix)
             all_pairs += lst
         all_pairs += self.generate_create_function(prefix=prefix)
         return all_pairs
+
+    def deactivate_setter(self):
+        for i in self.items:
+            i.deactivate_setter()
+
+    def activate_setter(self):
+        for i in self.items:
+            i.activate_setter()
+
+    def describe(self) -> Dict:
+        if self.visible:
+            return {
+                "name": self.variable_name,
+                "description": self.description,
+                "items": [item.describe() for item in self.items if item.visible],
+            }
+        else:
+            return {}
+
+    def to_json(self) -> Dict:
+        if self.visible:
+            return {"value": [i.to_json()["value"] for i in self.items]}
+        else:
+            return {}
 
 
 # general definition of a Field containing other Fields
@@ -91,15 +147,59 @@ class NestedField(Field, ABC):
                 if hasattr(field_value, "generate_tool_functions") and callable(
                     getattr(field_value, "generate_tool_functions")
                 ):
+                    if prefix:
+                        new_prefix = prefix + "-" + self.variable_name
+                    else:
+                        new_prefix = self.variable_name
                     sub_functions = getattr(field_value, "generate_tool_functions")(
-                        prefix=prefix
-                        + "-"
-                        + self.variable_name
-                        # Example: results in subfield1.generate_tool_functions("-" + nestedField1.name)
-                        # Case distinction necessary if prefix = "" ?????????????
+                        new_prefix
                     )
                     all_functions += sub_functions
         return all_functions
+
+    def deactivate_setter(self):
+        for _, field_value in self.__dict__.items():
+
+            if isinstance(field_value, Field):
+                if hasattr(field_value, "deactivate_setter") and callable(
+                    getattr(field_value, "deactivate_setter")
+                ):
+                    getattr(field_value, "deactivate_setter")()
+
+    def activate_setter(self):
+        for _, field_value in self.__dict__.items():
+
+            if isinstance(field_value, Field):
+                if hasattr(field_value, "activate_sette") and callable(
+                    getattr(field_value, "activate_sette")
+                ):
+                    getattr(field_value, "activate_setter")()
+
+    def describe(self) -> Dict:
+        base: Dict = {}
+        if not self.visible:
+            return base
+
+        base["variable_name"] = self.variable_name
+        base["description"] = self.description
+
+        for field_name, field_value in self.__dict__.items():
+            if isinstance(field_value, Field):
+                if field_value.visible:
+                    base[field_name] = field_value.describe()
+        return base
+
+    def to_json(self) -> Dict:
+        if not self.visible:
+            return {"value": {}}
+
+        base: Dict = {}
+
+        for field_name, field_value in self.__dict__.items():
+            if isinstance(field_value, Field):
+                if field_value.visible:
+                    base[field_name] = field_value.to_json()["value"]
+        return {"value": base}
 
 
 # general definition of a field containing a single value
@@ -125,6 +225,8 @@ class ValueField(Field, ABC):
 
     # returns a list containing the FunctionDescriptionPairs of the ValueField
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
+        if not self.setter_active:
+            return []
         set_dct = {
             "type": "function",
             "function": {
@@ -149,6 +251,22 @@ class ValueField(Field, ABC):
                 llm_description=set_dct,
             )
         ]
+
+    def describe(self) -> Dict:
+        if self.visible:
+            return {
+                "variable_name": self.variable_name,
+                "description": self.description,
+                "value": self.value,
+            }
+        else:
+            return {}
+
+    def to_json(self) -> Dict:
+        if self.visible:
+            return {"value": self.value}
+        else:
+            return {}
 
 
 class StringField(ValueField):
@@ -175,13 +293,15 @@ class BoolField(ValueField):
 class IPField(StringField):
 
     def validate_value(self) -> bool:
-        return validators.ipv4(self.value) == True or validators.ipv6(self.value) == True
-                
+        return (
+            validators.ipv4(self.value) == True or validators.ipv6(self.value) == True
+        )
+
 
 class IPv4Field(IPField):
-    
+
     def validate_value(self) -> bool:
-            return validators.ipv4(self.value) == True
+        return validators.ipv4(self.value) == True
 
 
 class IPv6Field(IPField):
@@ -191,23 +311,23 @@ class IPv6Field(IPField):
 
 
 class PortField(IntField):
-    
+
     def validate_value(self) -> bool:
-        return 0 <= self.value <= 65535
-    
+        return 0 <= self.value <= 65535  # type: ignore
+
 
 class EmailField(StringField):
 
     def validate_value(self) -> bool:
         return validators.email(self.value) == True
-    
-    
+
+
 class UrlField(StringField):
 
     def validate_value(self) -> bool:
         return validators.url(self.value) == True
-    
-    
+
+
 class AbstractAppConfig(ABC, BaseModel):
 
     @abstractmethod
@@ -227,6 +347,22 @@ class AbstractAppConfig(ABC, BaseModel):
                     )
                     all_functions += sub_functions
         return all_functions
+
+    def describe(self) -> Dict:
+        base: Dict = {}
+        for field_name, field_value in self.__dict__.items():
+            if isinstance(field_value, Field):
+                if field_value.visible:
+                    base[field_name] = field_value.describe()
+        return base
+
+    def to_json(self) -> Dict:
+        base: Dict = {}
+        for field_name, field_value in self.__dict__.items():
+            if isinstance(field_value, Field):
+                if field_value.visible:
+                    base[field_name] = field_value.to_json()["value"]
+        return base
 
 
 # TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
@@ -333,6 +469,7 @@ class UAConnectorConfig(AbstractAppConfig):
 
 class DatabusUserConfig(UAConnectorConfig):
     pass
+
 
 class DatabusConfig(AbstractAppConfig):
     pass
