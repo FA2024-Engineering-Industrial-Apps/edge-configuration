@@ -3,6 +3,7 @@
 # Playground and testing files
 src/franks_playground.py
 src/testing_validators.py
+config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
