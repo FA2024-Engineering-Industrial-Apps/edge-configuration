@@ -7,3 +7,4 @@ def get_edge_devices() -> list[dict]:
     response = requests.get(URL + "/devices", headers={"Authorization": get_token()})
     return response.json()["data"]
 
+

@@ -32,3 +32,5 @@ def get_application_configuration_template(
     return response.text
 
 print(get_application_configuration("456e041339e744caa9514a1c86536067"))
+
+print(get_application_configuration_template("456e041339e744caa9514a1c86536067", "3d24e7d090bf44d8be2adaa770abd162", "82c6b39463d5410196b814af90ee30c4"))
