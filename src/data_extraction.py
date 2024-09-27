@@ -28,7 +28,7 @@ class DataExtractor:
 
         self.tool_descriptions = [i.llm_description for i in tools]
 
-    def update_data(self, messages: List[Dict]):
+    def update_data(self, messages: List[Dict]) -> str:
         self._refresh_tools()
 
         response_pair = self.client.prompt_tool(messages, self.tool_descriptions)
@@ -52,9 +52,13 @@ class DataExtractor:
                     **function_args,
                     )
                 print(f"Executing {function_name} was succesful!")
+                validationMessage = None
             except ValidationException:
                 print(f"Validation Error concerning {function_name}!")
                 # TODO: Feedback to GPT
-                # Possibly a solution:
+                validationMessage = "The execution of the"
+
+            print(f"Validation Message:\n{validationMessage}")
+            return validationMessage
                 
                 
