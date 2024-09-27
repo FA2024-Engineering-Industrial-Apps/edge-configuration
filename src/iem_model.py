@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Callable, Optional
-from typing_extensions import Unpack
 from pydantic.dataclasses import dataclass
 from pydantic import BaseModel, ConfigDict
+from error_handling import ValidationException
 import validators
 
 
@@ -207,10 +207,13 @@ class ValueField(Field, ABC):
     value: Any
 
     def set_value(self, val: Any):
-        self.value = val
+        if self.validate_value(val):
+            self.value = val
+        else:
+            raise ValidationException("Value Validation failed / yielded false.")
 
-    def validate_value(self) -> bool:
-        return True
+    def validate_value(self, val) -> bool:
+        return val is not None
 
     # returns a senseful name of the set_value function used for the llm description
     def setter_name(self, prefix) -> str:
@@ -292,40 +295,40 @@ class BoolField(ValueField):
 
 class IPField(StringField):
 
-    def validate_value(self) -> bool:
+    def validate_value(self, val) -> bool:
         return (
-            validators.ipv4(self.value) == True or validators.ipv6(self.value) == True
+            validators.ipv4(val) == True or validators.ipv6(val) == True
         )
 
 
 class IPv4Field(IPField):
 
-    def validate_value(self) -> bool:
-        return validators.ipv4(self.value) == True
+    def validate_value(self, val) -> bool:
+        return validators.ipv4(val) == True
 
 
 class IPv6Field(IPField):
 
-    def validate_value(self) -> bool:
-        return validators.ipv6(self.value) == True
+    def validate_value(self, val) -> bool:
+        return validators.ipv6(val) == True
 
 
 class PortField(IntField):
 
-    def validate_value(self) -> bool:
-        return 0 <= self.value <= 65535  # type: ignore
+    def validate_value(self, val) -> bool:
+        return 0 <= val <= 65535  # type: ignore
 
 
 class EmailField(StringField):
 
-    def validate_value(self) -> bool:
-        return validators.email(self.value) == True
+    def validate_value(self, val) -> bool:
+        return validators.email(val) == True
 
 
 class UrlField(StringField):
 
-    def validate_value(self) -> bool:
-        return validators.url(self.value) == True
+    def validate_value(self, val) -> bool:
+        return validators.url(val) == True
 
 
 class AbstractAppConfig(ABC, BaseModel):
@@ -419,7 +422,8 @@ class UAConnectorConfig(AbstractAppConfig):
         description="The name of the corresponding OPC UA Server.",
         value=None,
     )
-    urlField: StringField = StringField(
+    # Changed for testing TAKE THIS BACK!!!!!!!!!!!!!!!!!!!!!!!
+    urlField: UrlField = UrlField(
         variable_name="OPC-UA_URL",
         description="The URL of the corresponding OPC UA Server.",
         value=None,

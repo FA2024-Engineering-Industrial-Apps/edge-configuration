@@ -25,9 +25,14 @@ if target == "Edge Config":
 if prompt := st.chat_input("Write something"):
     with st.chat_message("user"):
         st.markdown(prompt)
+    # Calling the LLM and possibly change values    
     pydantic_out = strategy.send_message(prompt, st.session_state.messages)
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.messages.append({"role": "assistant", "content": pydantic_out})
+    # TODO: Add an potential extra system promt to st.session_state.messages to tell the LLM 
+    # that a validation failed and the value was not set
+    
+
     st.chat_message("assistant").markdown(
         f"""
         ```javascript
