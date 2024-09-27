@@ -33,12 +33,9 @@ if prompt := st.chat_input("Write something"):
 
     response_message, current_model = strategy.send_message(prompt, st.session_state.messages)
 
-    st.chat_message("assistant").markdown(
-        f"""
-          ```javascript
-            {response_message}
-            """
-    )
+    with st.chat_message("assistant"):
+        st.markdown(response_message)
+        
     st.session_state.messages.append({"role": "assistant", "content": response_message})
 
     # TODO: Add an potential extra system promt to st.session_state.messages to tell the LLM
