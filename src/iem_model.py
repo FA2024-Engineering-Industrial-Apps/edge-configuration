@@ -46,7 +46,74 @@ class Field(ABC, BaseModel):
     @abstractmethod
     def to_json(self) -> Dict:
         pass
-
+    
+# For simplicity I assume that selector input is always a string
+class EnumField(Field, ABC):
+    mapping: Dict[str, Any]
+    key: Any
+    
+    def __init__(self, mapping: Dict[str, Any]):
+        self.mapping = mapping
+        
+    def validate_value(self, key: str) -> bool:
+        return key in self.mapping.keys()
+        
+    def set_value(self, key: str):
+        if self.validate_value(key):
+            self.key = key
+        else:
+            # To be pushed
+            raise ValidationException("Selector option is not available")
+        
+    def setter_name(self, prefix) -> str:
+        if not prefix:
+            return f"{self.variable_name}-set_value"
+        else:
+            return f"{prefix}-{self.variable_name}-set_value"
+    
+    def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
+        if not self.setter_active:
+            return []
+        set_dct = {
+            "type": "function",
+            "function": {
+                "name": self.setter_name(prefix),
+                "description": f"Select value for selector {self.variable_name}. Available values are {' '.join(self.mapping.keys())}",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "val": {
+                            "type": "string",
+                            "description": f"Selected option from selector {self.variable_name}",
+                        },
+                    },
+                    "required": [self.variable_name],
+                },
+            },
+        }
+        return [
+            FunctionDescriptionPair(
+                name=self.setter_name(prefix),
+                fct=self.set_value,
+                llm_description=set_dct,
+            )
+        ]
+        
+    def describe(self) -> Dict:
+        if self.visible:
+            return {
+                "variable_name": self.variable_name,
+                "description": self.description,
+                "value": self.mapping[self.key],
+            }
+        else:
+            return {}
+        
+    def to_json(self) -> Dict:
+        if self.visible:
+            return {"value": self.mapping[self.key]}
+        else:
+            return {}  
 
 class ListField(Field):
     items: List[Field] = []
@@ -266,7 +333,7 @@ class ValueField(Field, ABC):
         if self.visible:
             return {"value": self.value}
         else:
-            return {}
+            return {}    
 
 
 class StringField(ValueField):
@@ -366,50 +433,137 @@ class AbstractAppConfig(ABC, BaseModel):
 
 
 # TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
-
+class OPCUATagAddressField(NestedField):
+    namespace: IntField(
+        variable_name="ns",
+        description="Index of namespace for data within OPC UA Server",
+        value=None
+    )
+    nodeID: StringField(
+        variable_name="s",
+        description="ID of the data node within the OPC UA Server",
+        value=None
+    )
+    
+    def to_json(self) -> Dict:
+        if self.visible:
+            return {"value": f"ns={self.namespace.value};s={self.nodeID.value}"}
+        else:
+            return {}
+        
+    def describe(self) -> Dict:
+        if self.visible:
+            return {
+                "variable_name": self.variable_name,
+                "description": self.description,
+                "value": f"ns={self.namespace.value};s={self.nodeID.value}"
+            }
+        else:
+            return {}
 
 class OPCUATagConfig(NestedField):
-    name: StringField
-    address: StringField
-    dataType: StringField
-    acquisitionCycle: IntField
-    acquisitionMode: StringField
-    isArrayTypeTag: BoolField
-    accessMode: StringField
-    comments: StringField
+    name: StringField = StringField(
+        variable_name="name",
+        description="Name of OPC UA Server data node",
+        value=None
+    )
+    address: StringField = OPCUATagAddressField(
+        variable_name="address",
+        description="Address of data within the OPC UA server. Consists of namespace index (ns) and node id (s)."
+    )
+    # EnumField?
+    dataType: StringField = StringField(
+        variable_name="dataType",
+        description="""
+        Type of data within the OPC UA server node. Available data types: Int, Bool, Byte, Char, DInt, String, 
+        Real, Word, LInt, SInt, USInt, UInt, UDInt, ULInt, LReal, DWord, LWord. For array data add "Array" suffix to the type, e.g. "Int Array". 
+        """,
+        value=None
+    )
+    acquisitionCycle: EnumField = EnumField(
+        variable_name="acquisitionCycle",
+        description="Time between consequent value checks in milliseconds or second. Available times: 10 milliseconds, 50 milliseconds, 100 milliseconds, 250 milliseconds, 500 milliseconds, 1 second, 2 second, 5 second, 10 second",
+        key=None,
+        mapping={"10 milliseconds": 10, "50 milliseconds": 50, "100 milliseconds": 100, "250 milliseconds": 250, "500 milliseconds": 500, "1 second": 1000, "2 second": 2000, "5 second": 5000, "10 second": 10000}
+    )
+    acquisitionMode: EnumField = EnumField(
+        variable_name="acquisitionMode",
+        description="Aquisition mode, describing when UAConnector will pull value from data node. Possible options: CyclicOnChange",
+        mapping={"CyclicOnChange": "CyclicOnChange"},
+        key="CyclicOnChange"
+    )
+    isArrayTypeTag: BoolField = BoolField(
+        variable_name="isArrayTypeTag",
+        description="Boolean tag used to determine whether the data has an array type",
+        value=None
+    )
+    accessMode: EnumField = EnumField(
+        variable_name="accessMode",
+        description="Access mode of UA Connector to data node. Either Read, or Read & Write",
+        key=None,
+        mapping={"Read": "r", "Read & Write": "rw"}
+    )
+    comments: StringField = StringField(
+        variable_name="comments",
+        description="Comment describing the data transmitted from data node.",
+        value=None
+    )
 
 
 class OPCUADatapointConfig(NestedField):
     name: StringField = StringField(
-        variable_name="Name",
+        variable_name="name",
         description="The name of the corresponding OPC UA Server.",
         value=None,
     )
-    tags: List[OPCUATagConfig] = []
-    OPCUAUrl: StringField = StringField(
-        variable_name="OPC-UA_URL",
+    tags: ListField = ListField(
+        variable_name="tags",
+        description="List of data nodes of the OPC UA server.",
+        blueprint=OPCUATagConfig
+    )
+    OPCUAUrl: IPv6Field = IPv6Field(
+        variable_name="OPCUAUrl",
         description="The URL of the corresponding OPC UA Server.",
         value=None,
     )
-    portNumber: IntField = IntField(
-        variable_name="Port_number",
+    portNumber: PortField = PortField(
+        variable_name="portNumber",
         description="The port number from which the data of OPC UA Server will be sent.",
         value=None,
     )
     # TODO: Create separate field types for fields below cause they are in fact enums
-    authenticationMode: IntField
+    authenticationMode: EnumField = EnumField(
+        variable_name="authenticationMode",
+        key=None,
+        description="Mode of authentication to OPC UA Server. Can be Anonymous or User ID & Password",
+        mapping={"Anonymous": 1, "User ID & Password": 2}
+    )
     encryptionMode: IntField
     securityPolicy: IntField
 
 
 class DocumentationUAConnectorConfig(AbstractAppConfig):
-    datapoints: List[
-        OPCUADatapointConfig
-    ]  # For S7, S7Plus change to collection of lists
-    dbservicename: StringField
-    # TODO: Maybe move authentication data somewhere else?
-    username: StringField
-    password: StringField
+    datapoints: ListField(
+        variable_name="datapoints",
+        description="List of OPC UA server configs that act as data sources.",
+        blueprint=OPCUADatapointConfig
+    ) # For S7, S7Plus change to collection of lists
+    dbservicename: StringField(
+        variable_name="dbservicename",
+        description="Name of the Databus service to which the data from UA Connector will be published",
+        value=None
+    )
+    # TODO: Create function for separate input of sensitive fields so they do not go through LLM
+    username: StringField(
+        variable_name="username",
+        description="Username used to connect to Databus",
+        value="edge"
+    )
+    password: StringField(
+        variable_name="password",
+        description="Password used to connect to Databus",
+        value="edge"
+    )
 
 
 # definition of the UAConnector Config containing all data for the configuration of a UA Connector
