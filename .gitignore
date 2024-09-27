@@ -1,8 +1,10 @@
 .streamlit/secrets.toml
 
 # Playground and testing files
-src/frank_playground.py
+src/franks_playground.py
 src/testing_validators.py
+config.json
+src/function_calling.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

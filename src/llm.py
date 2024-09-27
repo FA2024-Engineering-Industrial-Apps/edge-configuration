@@ -34,10 +34,12 @@ def retrieve_model(prompt: str, model: AbstractAppConfig, history: list) -> str:
                 continue
             messages.append(element)
         messages.append({"role": "user", "content": prompt})
-        print(messages)
+        # print(messages)
         response = client.chat.completions.create(model="gpt-4o", messages=messages)
         data_extractor.update_data(messages)
-        print(model)
+        # TODO: Validation error feedback
+        
+        print("The new state of the model:\n", model, "\n")
         history.append(
             {
                 "role": "system",
@@ -66,7 +68,7 @@ def retrieve_model(prompt: str, model: AbstractAppConfig, history: list) -> str:
                     {"role": "user", "content": prompt},
                 ],
             )
-            print(json_response.choices[0].message.content)
+            # print(json_response.choices[0].message.content)
             return model[json_response.choices[0].message.content.strip()]  # type: ignore
         else:
             # model_definiton = model.model_json_schema()
