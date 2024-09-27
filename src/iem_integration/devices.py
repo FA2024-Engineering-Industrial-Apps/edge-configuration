@@ -1,8 +1,8 @@
 import requests
 
 from pydantic import BaseModel
-from constants import IEM_API, PORTAL_SERVICE_API
-from auth import get_token
+from iem_integration.constants import IEM_API, PORTAL_SERVICE_API
+from iem_integration.auth import get_token
 
 
 class Device(BaseModel):

@@ -9,7 +9,7 @@ from enum import Enum
 import json
 from error_handling import LLMInteractionException
 
-from iem_model import AbstractAppConfig
+from iem_model import AppModel
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional
 
@@ -27,7 +27,7 @@ class LLM(ABC):
     system_prompt: str
     model_name: str
 
-    def prepare_prompt(self, input_prompt: str, history: list, config: AbstractAppConfig) -> List[Dict]:
+    def prepare_prompt(self, input_prompt: str, history: list, config: AppModel) -> List[Dict]:
         msg = history[-2:]
         if self.system_prompt:
             msg.insert(0, {"role": "system", "content": self.system_prompt})
@@ -51,7 +51,7 @@ class LLM(ABC):
             raise LLMInteractionException(f"{self.model_name} returned empty response")
         return ret
 
-    def prompt(self, input: str, history: list, config: AbstractAppConfig) -> str:
+    def prompt(self, input: str, history: list, config: AppModel) -> str:
         msg = self.prepare_prompt(input, history, config)
         return self.prompt_conversation(msg)
 

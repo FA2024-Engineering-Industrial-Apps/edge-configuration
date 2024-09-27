@@ -1,6 +1,6 @@
 import requests
-from constants import IEM_API
-from auth import get_token
+from iem_integration.constants import IEM_API
+from iem_integration.auth import get_token
 
 
 def install_app_on_edge_device(

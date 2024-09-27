@@ -1,8 +1,9 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import List
 
 from llm import retrieve_model
-from iem_model import App, UAConnectorConfig, AbstractAppConfig
+from iem_model import App, UAConnectorConfig, AbstractAppConfig, AppModel
 from data_extraction import DataExtractor
 from llm_service import GPT4o
 from nl_service import NLService
@@ -36,12 +37,14 @@ For this every field of every app config he wants to use has to be filled with a
 Ask the user for the values, and answer his questions about the apps and the fields.
     """
 
+    opc_ua_connector = App(
+        name="OPC_UA_CONNECTOR",
+        description="A app which connects to a configured OPC UA Server and collects data from this.",
+        config=UAConnectorConfig(),
+        id="456e041339e744caa9514a1c86536067"
+    )
+
     def create_app_overview(self) -> str:
-        opc_ua_connector = App(
-            name="OPC UA Connector",
-            description="A app which connects to a configured OPC UA Server and collects data from this.",
-            config=UAConnectorConfig(),
-        )
         return """
         {{
             apps: [
@@ -49,21 +52,22 @@ Ask the user for the values, and answer his questions about the apps and the fie
             ]
         }}
         """.format(
-            opc_ua_connector.generate_prompt_string()
+            self.opc_ua_connector.generate_prompt_string()
         )
 
     def __init__(self):
         adapted_system_prompt = self.system_prompt.format(
             self.create_app_overview()
         )
-        self.config_object = UAConnectorConfig()
-        self.nl_service = NLService(self.config_object,
+        self.model: AppModel = AppModel()
+        self.model.apps = [self.opc_ua_connector]
+        self.nl_service = NLService(self.model,
                                     GPT4o(adapted_system_prompt))
-        self.data_extractor = DataExtractor(self.config_object)
+        self.data_extractor = DataExtractor(self.model)
 
     def send_message(self, prompt: str, history: list) -> (str, AbstractAppConfig):
         # print(history)
-        nl_response = self.nl_service.retrieve_model(prompt, self.config_object, history)
+        nl_response = self.nl_service.retrieve_model(prompt, self.model, history)
         updated_history = history + [
             {"role": "user", "content": prompt},
             {"role": "assistant", "content": nl_response},
@@ -73,4 +77,3 @@ Ask the user for the values, and answer his questions about the apps and the fie
             "content": prompt
         }])
         return nl_response, self.config_object
-

@@ -1,6 +1,6 @@
 import requests
 import os
-from constants import TOKEN_ENDPOINT
+from iem_integration.constants import TOKEN_ENDPOINT
 from dotenv import load_dotenv
 
 load_dotenv()

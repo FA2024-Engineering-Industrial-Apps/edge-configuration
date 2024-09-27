@@ -1,7 +1,7 @@
 from typing import List, Dict
 from openai import OpenAI
 from dotenv import load_dotenv
-from iem_model import AbstractAppConfig
+from iem_model import AbstractAppConfig, AppModel
 import json
 from llm_service import LLM, GPT4o
 from error_handling import ValidationException
@@ -9,10 +9,10 @@ from error_handling import ValidationException
 
 class DataExtractor:
 
-    model: AbstractAppConfig
+    model: AppModel
     client: LLM
 
-    def __init__(self, data_obj: AbstractAppConfig, llm=GPT4o()):
+    def __init__(self, data_obj: AppModel, llm=GPT4o()):
         self.model = data_obj
         self.client = llm
         self._refresh_tools()
