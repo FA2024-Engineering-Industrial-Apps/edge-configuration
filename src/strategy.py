@@ -6,12 +6,13 @@ from iem_model import App, UAConnectorConfig, AbstractAppConfig
 from data_extraction import DataExtractor
 from llm_service import GPT4o
 from nl_service import NLService
+from typing import Tuple
 
 
 class Strategy(ABC):
 
     @abstractmethod
-    def send_message(self, prompt: str, history: list) -> str:
+    def send_message(self, prompt: str, history: list) -> Tuple[str, AbstractAppConfig]:
         pass
 
 
@@ -53,24 +54,19 @@ Ask the user for the values, and answer his questions about the apps and the fie
         )
 
     def __init__(self):
-        adapted_system_prompt = self.system_prompt.format(
-            self.create_app_overview()
-        )
+        adapted_system_prompt = self.system_prompt.format(self.create_app_overview())
         self.config_object = UAConnectorConfig()
-        self.nl_service = NLService(self.config_object,
-                                    GPT4o(adapted_system_prompt))
+        self.nl_service = NLService(self.config_object, GPT4o(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.config_object)
 
-    def send_message(self, prompt: str, history: list) -> (str, AbstractAppConfig):
+    def send_message(self, prompt: str, history: list) -> Tuple[str, AbstractAppConfig]:
         # print(history)
-        nl_response = self.nl_service.retrieve_model(prompt, self.config_object, history)
+        nl_response = self.nl_service.retrieve_model(
+            prompt, self.config_object, history
+        )
         updated_history = history + [
             {"role": "user", "content": prompt},
             {"role": "assistant", "content": nl_response},
         ]
-        self.data_extractor.update_data(history + [{
-            "role": "user",
-            "content": prompt
-        }])
+        self.data_extractor.update_data(history + [{"role": "user", "content": prompt}])
         return nl_response, self.config_object
-
