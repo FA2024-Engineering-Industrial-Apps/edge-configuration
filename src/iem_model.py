@@ -622,7 +622,30 @@ class UAConnectorConfig(AbstractAppConfig):
             self.portField.value,
         )
 
+    def generate_prompt_sidebar(self):
+        string = """
+            
+                
+                Name: {0}
+            
+        
+                
+                URL: {1}
+            
+        
+                
+                Port number: {2}
+            
+        
+        """
+        return string.format(
 
+            self.nameField.value,
+
+            self.urlField.value,
+
+            self.portField.value,
+        )
 class DatabusUserConfig(UAConnectorConfig):
     pass
 

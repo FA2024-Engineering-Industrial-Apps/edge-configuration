@@ -27,11 +27,16 @@ class LLM(ABC):
     system_prompt: str
     model_name: str
 
-    def prepare_prompt(self, input: str) -> List[Dict]:
-        msg = []
+    def prepare_prompt(self, input_prompt: str, history: list, config: AbstractAppConfig) -> List[Dict]:
+        msg = history[-2:]
         if self.system_prompt:
-            msg.append({"role": "system", "content": self.system_prompt})
-        msg.append({"role": "user", "content": input})
+            msg.insert(0, {"role": "system", "content": self.system_prompt})
+        msg.append({
+                "role": "system",
+                "content": "The current configuration is: "
+                + config.generate_prompt_string(),
+            })
+        msg.append({"role": "user", "content": input_prompt})
         return msg
 
     def send_request(self, messages: List[Dict]) -> ChatCompletion:
@@ -46,8 +51,8 @@ class LLM(ABC):
             raise LLMInteractionException(f"{self.model_name} returned empty response")
         return ret
 
-    def prompt(self, input: str) -> str:
-        msg = self.prepare_prompt(input)
+    def prompt(self, input: str, history: list, config: AbstractAppConfig) -> str:
+        msg = self.prepare_prompt(input, history, config)
         return self.prompt_conversation(msg)
 
     def prompt_conversation(self, input: List[Dict]) -> str:
