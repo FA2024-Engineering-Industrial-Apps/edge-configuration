@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Callable, Optional
 from pydantic.dataclasses import dataclass
 from pydantic import BaseModel, ConfigDict
 from error_handling import ValidationException
-import validators
 
 
 @dataclass
@@ -51,9 +50,6 @@ class Field(ABC, BaseModel):
 class EnumField(Field, ABC):
     mapping: Dict[str, Any]
     key: Any
-    
-    def __init__(self, mapping: Dict[str, Any]):
-        self.mapping = mapping
         
     def validate_value(self, key: str) -> bool:
         return key in self.mapping.keys()
@@ -437,12 +433,12 @@ class AbstractAppConfig(ABC, BaseModel):
 
 # TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
 class OPCUATagAddressField(NestedField):
-    namespace: IntField(
+    namespace: IntField = IntField(
         variable_name="ns",
         description="Index of namespace for data within OPC UA Server",
         value=None
     )
-    nodeID: StringField(
+    nodeID: StringField = StringField(
         variable_name="s",
         description="ID of the data node within the OPC UA Server",
         value=None
@@ -522,7 +518,10 @@ class OPCUADatapointConfig(NestedField):
     tags: ListField = ListField(
         variable_name="tags",
         description="List of data nodes of the OPC UA server.",
-        blueprint=OPCUATagConfig
+        blueprint=OPCUATagConfig(
+            variable_name="tag",
+            description="Tag representing a data node of OPC UA Server"
+        )
     )
     OPCUAUrl: IPv6Field = IPv6Field(
         variable_name="OPCUAUrl",
@@ -534,7 +533,6 @@ class OPCUADatapointConfig(NestedField):
         description="The port number from which the data of OPC UA Server will be sent.",
         value=None,
     )
-    # TODO: Create separate field types for fields below cause they are in fact enums
     authenticationMode: EnumField = EnumField(
         variable_name="authenticationMode",
         key=None,
@@ -547,7 +545,10 @@ class DocumentationUAConnectorConfig(AbstractAppConfig):
     datapoints: ListField(
         variable_name="datapoints",
         description="List of OPC UA server configs that act as data sources.",
-        blueprint=OPCUADatapointConfig
+        blueprint=OPCUADatapointConfig(
+            variable_name="OPCUAServer_Datapoint",
+            description="OPC UA Server that sends data through this UA Connector"
+        )
     ) # For S7, S7Plus change to collection of lists
     dbservicename: StringField(
         variable_name="dbservicename",
@@ -623,10 +624,12 @@ class UAConnectorConfig(AbstractAppConfig):
         )
 
 
-class DatabusUserConfig(UAConnectorConfig):
+#Full config
+class DocumentationDatabusConfig(AbstractAppConfig):
     pass
 
 
+#For testing
 class DatabusConfig(AbstractAppConfig):
     pass
 
