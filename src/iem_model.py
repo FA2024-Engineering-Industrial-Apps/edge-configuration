@@ -45,7 +45,8 @@ class Field(ABC, BaseModel):
     @abstractmethod
     def to_json(self) -> Dict:
         pass
-    
+
+
 # For simplicity I assume that selector input is always a string
 class EnumField(Field, ABC):
     mapping: Dict[str, Any]
@@ -53,20 +54,20 @@ class EnumField(Field, ABC):
         
     def validate_value(self, key: str) -> bool:
         return key in self.mapping.keys()
-        
+
     def set_value(self, key: str):
         if self.validate_value(key):
             self.key = key
         else:
             # To be pushed
             raise ValidationException("Selector option is not available")
-        
+
     def setter_name(self, prefix) -> str:
         if not prefix:
             return f"{self.variable_name}-set_value"
         else:
             return f"{prefix}-{self.variable_name}-set_value"
-    
+
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         if not self.setter_active:
             return []
@@ -94,7 +95,7 @@ class EnumField(Field, ABC):
                 llm_description=set_dct,
             )
         ]
-        
+
     def describe(self) -> Dict:
         if self.visible:
             return {
@@ -104,12 +105,13 @@ class EnumField(Field, ABC):
             }
         else:
             return {}
-        
+
     def to_json(self) -> Dict:
         if self.visible:
             return {"value": self.mapping[self.key]}
         else:
-            return {}  
+            return {}
+
 
 class ListField(Field):
     items: List[Field] = []
@@ -208,7 +210,7 @@ class NestedField(Field, ABC):
 
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                    getattr(field_value, "generate_tool_functions")
+                        getattr(field_value, "generate_tool_functions")
                 ):
                     if prefix:
                         new_prefix = prefix + "-" + self.variable_name
@@ -225,7 +227,7 @@ class NestedField(Field, ABC):
 
             if isinstance(field_value, Field):
                 if hasattr(field_value, "deactivate_setter") and callable(
-                    getattr(field_value, "deactivate_setter")
+                        getattr(field_value, "deactivate_setter")
                 ):
                     getattr(field_value, "deactivate_setter")()
 
@@ -234,7 +236,7 @@ class NestedField(Field, ABC):
 
             if isinstance(field_value, Field):
                 if hasattr(field_value, "activate_sette") and callable(
-                    getattr(field_value, "activate_sette")
+                        getattr(field_value, "activate_sette")
                 ):
                     getattr(field_value, "activate_setter")()
 
@@ -332,7 +334,7 @@ class ValueField(Field, ABC):
         if self.visible:
             return {"value": self.value}
         else:
-            return {}    
+            return {}
 
 
 class StringField(ValueField):
@@ -360,7 +362,7 @@ class IPField(StringField):
 
     def validate_value(self, val) -> bool:
         return (
-            validators.ipv4(val) == True or validators.ipv6(val) == True
+                validators.ipv4(val) == True or validators.ipv6(val) == True
         )
 
 
@@ -406,7 +408,7 @@ class AbstractAppConfig(ABC, BaseModel):
         for field_name, field_value in self.__dict__.items():
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                    getattr(field_value, "generate_tool_functions")
+                        getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         prefix=""
@@ -443,13 +445,13 @@ class OPCUATagAddressField(NestedField):
         description="ID of the data node within the OPC UA Server",
         value=None
     )
-    
+
     def to_json(self) -> Dict:
         if self.visible:
             return {"value": f"ns={self.namespace.value};s={self.nodeID.value}"}
         else:
             return {}
-        
+
     def describe(self) -> Dict:
         if self.visible:
             return {
@@ -460,15 +462,27 @@ class OPCUATagAddressField(NestedField):
         else:
             return {}
 
+
 class OPCUATagConfig(NestedField):
     name: StringField = StringField(
         variable_name="name",
         description="Name of OPC UA Server data node",
         value=None
     )
-    address: StringField = OPCUATagAddressField(
+    address: OPCUATagAddressField = OPCUATagAddressField(
         variable_name="address",
-        description="Address of data within the OPC UA server. Consists of namespace index (ns) and node id (s)."
+        description="Address of data within the OPC UA server. Consists of namespace index (ns) and node id (s).",
+        value=None,
+        nodeID=StringField(
+            variable_name="nodeID",
+            description="ID of the data node within the OPC UA server",
+            value=None
+        ),
+        namespace=IntField(
+            variable_name="namespace",
+            description="Index of namespace for data within OPC UA Server",
+            value=None
+        )
     )
     # EnumField?
     dataType: StringField = StringField(
@@ -479,29 +493,30 @@ class OPCUATagConfig(NestedField):
         """,
         value=None
     )
-    acquisitionCycle: EnumField = EnumField(
-        variable_name="acquisitionCycle",
-        description="Time between consequent value checks in milliseconds or second. Available times: 10 milliseconds, 50 milliseconds, 100 milliseconds, 250 milliseconds, 500 milliseconds, 1 second, 2 second, 5 second, 10 second",
-        key=None,
-        mapping={"10 milliseconds": 10, "50 milliseconds": 50, "100 milliseconds": 100, "250 milliseconds": 250, "500 milliseconds": 500, "1 second": 1000, "2 second": 2000, "5 second": 5000, "10 second": 10000}
-    )
-    acquisitionMode: EnumField = EnumField(
-        variable_name="acquisitionMode",
-        description="Aquisition mode, describing when UAConnector will pull value from data node. Possible options: CyclicOnChange",
-        mapping={"CyclicOnChange": "CyclicOnChange"},
-        key="CyclicOnChange"
-    )
+    # acquisitionCycle: EnumField = EnumField(
+    #     variable_name="acquisitionCycle",
+    #     description="Time between consequent value checks in milliseconds or second. Available times: 10 milliseconds, 50 milliseconds, 100 milliseconds, 250 milliseconds, 500 milliseconds, 1 second, 2 second, 5 second, 10 second",
+    #     key=None,
+    #     mapping={"10 milliseconds": 10, "50 milliseconds": 50, "100 milliseconds": 100, "250 milliseconds": 250,
+    #              "500 milliseconds": 500, "1 second": 1000, "2 second": 2000, "5 second": 5000, "10 second": 10000}
+    # )
+    # acquisitionMode: EnumField = EnumField(
+    #     variable_name="acquisitionMode",
+    #     description="Aquisition mode, describing when UAConnector will pull value from data node. Possible options: CyclicOnChange",
+    #     mapping={"CyclicOnChange": "CyclicOnChange"},
+    #     key="CyclicOnChange"
+    # )
     isArrayTypeTag: BoolField = BoolField(
         variable_name="isArrayTypeTag",
         description="Boolean tag used to determine whether the data has an array type",
         value=None
     )
-    accessMode: EnumField = EnumField(
-        variable_name="accessMode",
-        description="Access mode of UA Connector to data node. Either Read, or Read & Write",
-        key=None,
-        mapping={"Read": "r", "Read & Write": "rw"}
-    )
+    # accessMode: EnumField = EnumField(
+    #     variable_name="accessMode",
+    #     description="Access mode of UA Connector to data node. Either Read, or Read & Write",
+    #     key=None,
+    #     mapping={"Read": "r", "Read & Write": "rw"}
+    # )
     comments: StringField = StringField(
         variable_name="comments",
         description="Comment describing the data transmitted from data node.",
@@ -620,6 +635,31 @@ class UAConnectorConfig(AbstractAppConfig):
             self.urlField.value,
             self.portField.variable_name,
             self.portField.description,
+            self.portField.value,
+        )
+
+    def generate_prompt_sidebar(self):
+        string = """
+            
+                
+                Name: {0}
+            
+        
+                
+                URL: {1}
+            
+        
+                
+                Port number: {2}
+            
+        
+        """
+        return string.format(
+
+            self.nameField.value,
+
+            self.urlField.value,
+
             self.portField.value,
         )
 
