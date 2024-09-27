@@ -35,6 +35,8 @@ in this field.
 You help the user to configure any app he wants to use.
 For this every field of every app config he wants to use has to be filled with a value.
 Ask the user for the values, and answer his questions about the apps and the fields.
+
+If there is nonsensical information for setting one of the values, skip this value but continue with the next one and call the setter function.
     """
 
     def create_app_overview(self) -> str:
