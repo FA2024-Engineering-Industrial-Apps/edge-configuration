@@ -12,7 +12,7 @@ class DataExtractor:
     model: AppModel
     client: LLM
 
-    def __init__(self, data_obj: AppModel, llm=GPT4Turbo()):
+    def __init__(self, data_obj: AppModel, llm=GPT4o()):
         self.model = data_obj
         self.client = llm
         self._refresh_tools()

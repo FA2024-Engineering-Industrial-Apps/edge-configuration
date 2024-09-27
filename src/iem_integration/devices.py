@@ -51,6 +51,7 @@ def get_device_details(device_name: str) -> DetailedDevice:
     """
 
     devices = get_device_list()
+    my_device = None
 
     for device in devices:
         if device.name == device_name:
@@ -80,5 +81,5 @@ def get_device_details(device_name: str) -> DetailedDevice:
     )
 
 
-print(get_device_list())
-print(get_device_details("ipcbernius01").id)
+#print(get_device_list())
+#print(get_device_details("ipcbernius01").id)

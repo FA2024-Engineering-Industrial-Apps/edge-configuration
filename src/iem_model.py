@@ -396,7 +396,9 @@ class EmailField(StringField):
 class UrlField(StringField):
 
     def validate_value(self, val) -> bool:
-        return validators.url(val) == True
+        # return validators.url(val) == True
+        # TODO: URL validation too harsh
+        return True
 
 
 class AbstractAppConfig(ABC, BaseModel):
@@ -728,7 +730,32 @@ class App:
             fct=self.submit_to_iem,
             llm_description=submit_dict
         )
-        return [submit_fct] + self.config.generate_tool_functions()
+
+        set_device_name_fct = {
+            "type": "function",
+            "function": {
+                "name": self.application_name + "-set_device_name",
+                "description": f"Set the installed_device_name for {self.application_name}.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "val": {
+                            "type": "string",
+                            "description": "the new installed_device_name",
+                        },
+                    },
+                    "required": ["installed_device_name"],
+                }
+            },
+        }
+
+        set_device_name_fct = FunctionDescriptionPair(
+            name=self.application_name + "-set_device_name",
+            fct=self.set_device_name,
+            llm_description=set_device_name_fct
+        )
+
+        return [submit_fct, set_device_name_fct] + self.config.generate_tool_functions()
 
     def generate_prompt_sidebar(self) -> str:
         result = f"""
@@ -743,7 +770,15 @@ class App:
         device_details = get_device_details(self.installed_device_name)
         prepared_config = converter.convert_to_iem_json(self.config.to_json(), device_details,
                                                         AppType[self.application_name])
+        #print("DONE")
+        #print(device_details.id)
+        #print(OPC_UA_CONNECTOR_APP_ID)
+        #print(prepared_config)
         install_app_on_edge_device(device_details.id, OPC_UA_CONNECTOR_APP_ID, [prepared_config])
+
+
+    def set_device_name(self, val):
+        self.installed_device_name = val
 
 
 class AppModel:
@@ -760,8 +795,8 @@ class AppModel:
         result_list = []
         for app in self.apps:
             result_list += app.generate_tool_functions()
-        print("TOOL FUNCTIONS: ")
-        print(result_list)
+        #print("TOOL FUNCTIONS: ")
+        #print(result_list)
         return result_list
 
     def generate_prompt_sidebar(self) -> str:

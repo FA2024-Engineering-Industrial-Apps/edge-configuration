@@ -38,6 +38,7 @@ You help the user to configure any app he wants to use.
 For this every field of every app config he wants to use has to be filled with a value.
 Before the user can install the apps to the IEM, for every app the "installed_device_name" has to be set.
 Ask the user for the values, and answer his questions about the apps and the fields.
+Only after all fields and the "installed_device_name" is set an app may be installed to IEM.
     """
 
     opc_ua_connector = App(
@@ -65,7 +66,7 @@ Ask the user for the values, and answer his questions about the apps and the fie
         self.model: AppModel = AppModel()
         self.model.apps = [self.opc_ua_connector]
         self.nl_service = NLService(self.model,
-                                    GPT4Turbo(adapted_system_prompt))
+                                    GPT4o(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.model)
 
     def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
