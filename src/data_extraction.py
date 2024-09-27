@@ -39,7 +39,7 @@ class DataExtractor:
         print(f"The extractor message is:\n{extractor_message}\n\n")
         print(f"tool_calls:\n {tool_calls}\n\n")
         if not tool_calls:
-            return
+            return validationPromts
 
         # Execute all function calls given by GPT
         print("Just before function calling loop")
@@ -62,7 +62,7 @@ class DataExtractor:
                 i.e. the given value did not meet the requirements for the field. 
                 Please regard this and ask the user for a new value.\n""")
 
-            print(f"Validation Message:\n{validationPromts}")
-            return validationPromts
+        print(f"Validation Message:\n{validationPromts}")
+        return validationPromts
                 
                 
