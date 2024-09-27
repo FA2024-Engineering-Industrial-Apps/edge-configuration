@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from llm import retrieve_model
 from iem_model import App, UAConnectorConfig, AbstractAppConfig
 from data_extraction import DataExtractor
-from llm_service import GPT4o
+from llm_service import GPT4o, GPT4Turbo
 from nl_service import NLService
 from typing import Tuple
 
@@ -56,8 +56,10 @@ Ask the user for the values, and answer his questions about the apps and the fie
     def __init__(self):
         adapted_system_prompt = self.system_prompt.format(self.create_app_overview())
         self.config_object = UAConnectorConfig()
-        self.nl_service = NLService(self.config_object, GPT4o(adapted_system_prompt))
-        self.data_extractor = DataExtractor(self.config_object)
+        self.nl_service = NLService(
+            self.config_object, GPT4Turbo(adapted_system_prompt)
+        )
+        self.data_extractor = DataExtractor(self.config_object, llm=GPT4Turbo())
 
     def send_message(self, prompt: str, history: list) -> Tuple[str, AbstractAppConfig]:
         # print(history)
