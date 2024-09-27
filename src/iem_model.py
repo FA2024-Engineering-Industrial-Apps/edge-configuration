@@ -538,8 +538,6 @@ class OPCUADatapointConfig(NestedField):
         description="Mode of authentication to OPC UA Server. Can be Anonymous or User ID & Password",
         mapping={"Anonymous": 1, "User ID & Password": 2}
     )
-    encryptionMode: IntField
-    securityPolicy: IntField
 
 
 class DocumentationUAConnectorConfig(AbstractAppConfig):
