@@ -493,30 +493,30 @@ class OPCUATagConfig(NestedField):
         """,
         value=None
     )
-    # acquisitionCycle: EnumField = EnumField(
-    #     variable_name="acquisitionCycle",
-    #     description="Time between consequent value checks in milliseconds or second. Available times: 10 milliseconds, 50 milliseconds, 100 milliseconds, 250 milliseconds, 500 milliseconds, 1 second, 2 second, 5 second, 10 second",
-    #     key=None,
-    #     mapping={"10 milliseconds": 10, "50 milliseconds": 50, "100 milliseconds": 100, "250 milliseconds": 250,
-    #              "500 milliseconds": 500, "1 second": 1000, "2 second": 2000, "5 second": 5000, "10 second": 10000}
-    # )
-    # acquisitionMode: EnumField = EnumField(
-    #     variable_name="acquisitionMode",
-    #     description="Aquisition mode, describing when UAConnector will pull value from data node. Possible options: CyclicOnChange",
-    #     mapping={"CyclicOnChange": "CyclicOnChange"},
-    #     key="CyclicOnChange"
-    # )
+    acquisitionCycle: EnumField = EnumField(
+        variable_name="acquisitionCycle",
+        description="Time between consequent value checks in milliseconds or second. Available times: 10 milliseconds, 50 milliseconds, 100 milliseconds, 250 milliseconds, 500 milliseconds, 1 second, 2 second, 5 second, 10 second",
+        key=None,
+        mapping={"10 milliseconds": 10, "50 milliseconds": 50, "100 milliseconds": 100, "250 milliseconds": 250,
+                  "500 milliseconds": 500, "1 second": 1000, "2 second": 2000, "5 second": 5000, "10 second": 10000}
+    )
+    acquisitionMode: EnumField = EnumField(
+        variable_name="acquisitionMode",
+        description="Aquisition mode, describing when UAConnector will pull value from data node. Possible options: CyclicOnChange",
+        mapping={"CyclicOnChange": "CyclicOnChange"},
+        key="CyclicOnChange"
+    )
     isArrayTypeTag: BoolField = BoolField(
         variable_name="isArrayTypeTag",
         description="Boolean tag used to determine whether the data has an array type",
         value=None
     )
-    # accessMode: EnumField = EnumField(
-    #     variable_name="accessMode",
-    #     description="Access mode of UA Connector to data node. Either Read, or Read & Write",
-    #     key=None,
-    #     mapping={"Read": "r", "Read & Write": "rw"}
-    # )
+    accessMode: EnumField = EnumField(
+        variable_name="accessMode",
+        description="Access mode of UA Connector to data node. Either Read, or Read & Write",
+        key=None,
+        mapping={"Read": "r", "Read & Write": "rw"}
+    )
     comments: StringField = StringField(
         variable_name="comments",
         description="Comment describing the data transmitted from data node.",
@@ -669,7 +669,7 @@ class DocumentationDatabusConfig(AbstractAppConfig):
     pass
 
 
-#For testing
+#For testing TODO
 class DatabusConfig(AbstractAppConfig):
     pass
 
