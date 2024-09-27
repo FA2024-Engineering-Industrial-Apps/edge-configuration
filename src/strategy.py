@@ -26,6 +26,7 @@ The Siemens IEM eco system consists of different apps, which each have to be con
 Down below you find a list of all available apps in the IEM eco system.
 Do not use any other information about IEM you have except for the app list below.
 Each app consists of an "Appname", an "App-Description", which describes what the app does,
+an "installed_device_name", which is the device name in IEM, where the app should be installed,
 and a config.
 Each config consists of fields, which have to be filled.
 Each field has a name, how the field is called in the user interface, and a description, what should be entered
@@ -35,6 +36,7 @@ in this field.
 
 You help the user to configure any app he wants to use.
 For this every field of every app config he wants to use has to be filled with a value.
+Before the user can install the apps to the IEM, for every app the "installed_device_name" has to be set.
 Ask the user for the values, and answer his questions about the apps and the fields.
     """
 
@@ -66,7 +68,7 @@ Ask the user for the values, and answer his questions about the apps and the fie
                                     GPT4Turbo(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.model)
 
-    def send_message(self, prompt: str, history: list) -> Tuple[str, AbstractAppConfig]:
+    def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
         # print(history)
         nl_response = self.nl_service.retrieve_model(
             prompt, self.model, history

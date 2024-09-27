@@ -3,7 +3,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from iem_model import AbstractAppConfig, AppModel
 import json
-from llm_service import LLM, GPT4o
+from llm_service import LLM, GPT4o, GPT4Turbo
 from error_handling import ValidationException
 
 
@@ -12,7 +12,7 @@ class DataExtractor:
     model: AppModel
     client: LLM
 
-    def __init__(self, data_obj: AppModel, llm=GPT4o()):
+    def __init__(self, data_obj: AppModel, llm=GPT4Turbo()):
         self.model = data_obj
         self.client = llm
         self._refresh_tools()

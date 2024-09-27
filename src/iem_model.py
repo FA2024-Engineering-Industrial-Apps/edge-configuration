@@ -215,7 +215,7 @@ class NestedField(Field, ABC):
 
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                    getattr(field_value, "generate_tool_functions")
+                        getattr(field_value, "generate_tool_functions")
                 ):
                     if prefix:
                         new_prefix = prefix + "-" + self.variable_name
@@ -232,7 +232,7 @@ class NestedField(Field, ABC):
 
             if isinstance(field_value, Field):
                 if hasattr(field_value, "deactivate_setter") and callable(
-                    getattr(field_value, "deactivate_setter")
+                        getattr(field_value, "deactivate_setter")
                 ):
                     getattr(field_value, "deactivate_setter")()
 
@@ -241,7 +241,7 @@ class NestedField(Field, ABC):
 
             if isinstance(field_value, Field):
                 if hasattr(field_value, "activate_sette") and callable(
-                    getattr(field_value, "activate_sette")
+                        getattr(field_value, "activate_sette")
                 ):
                     getattr(field_value, "activate_setter")()
 
@@ -405,13 +405,17 @@ class AbstractAppConfig(ABC, BaseModel):
     def generate_prompt_string(self):
         pass
 
+    @abstractmethod
+    def generate_prompt_sidebar(self):
+        pass
+
     # returns a list containing the FunctionDescriptionPairs of all Fields and Subfields of the AppConfig
     def generate_tool_functions(self) -> List[FunctionDescriptionPair]:
         all_functions = []
         for field_name, field_value in self.__dict__.items():
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                    getattr(field_value, "generate_tool_functions")
+                        getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         prefix=""
@@ -685,10 +689,10 @@ class App:
     application_name: str
     app_id: str
     application_description: str
-    installed_device_name: str
+    installed_device_name: str = None
     config: AbstractAppConfig
 
-    def __init__(self, name: str, id:str, description: str, config: AbstractAppConfig):
+    def __init__(self, name: str, id: str, description: str, config: AbstractAppConfig):
         self.application_name = name
         self.application_description = description
         self.config = config
@@ -699,11 +703,13 @@ class App:
         {{
             app-name: {0},
             app-description: {1},
-            fields: {2}
+            installed_device_name: {2}
+            fields: {3}
         }}
         """.format(
             self.application_name,
             self.application_description,
+            self.installed_device_name,
             self.config.generate_prompt_string(),
         )
 
@@ -715,7 +721,7 @@ class App:
                 "description": f"Install the app {self.application_name} to the IEM.",
                 "parameters": {},
                 "required": [],
-                },
+            },
         }
         submit_fct = FunctionDescriptionPair(
             name=self.application_name + "_submit_to_iem",
@@ -724,10 +730,19 @@ class App:
         )
         return [submit_fct] + self.config.generate_tool_functions()
 
+    def generate_prompt_sidebar(self) -> str:
+        result = f"""
+        App-Name: {self.application_name}
+        Device Name: {self.installed_device_name}
+        Config: {self.config.generate_prompt_sidebar()}
+        """
+        return result
+
     def submit_to_iem(self):
         converter = ConfigConverter()
         device_details = get_device_details(self.installed_device_name)
-        prepared_config = converter.convert_to_iem_json(self.config.to_json(), device_details, AppType[self.application_name])
+        prepared_config = converter.convert_to_iem_json(self.config.to_json(), device_details,
+                                                        AppType[self.application_name])
         install_app_on_edge_device(device_details.id, OPC_UA_CONNECTOR_APP_ID, [prepared_config])
 
 
@@ -745,5 +760,13 @@ class AppModel:
         result_list = []
         for app in self.apps:
             result_list += app.generate_tool_functions()
+        print("TOOL FUNCTIONS: ")
+        print(result_list)
         return result_list
 
+    def generate_prompt_sidebar(self) -> str:
+        result = ""
+        for app in self.apps:
+            result += app.generate_prompt_sidebar()
+            result += "-----------------------------\n"
+        return result
