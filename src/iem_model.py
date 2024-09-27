@@ -188,7 +188,7 @@ class ListField(Field):
     def describe(self) -> Dict:
         if self.visible:
             return {
-                "name": self.variable_name,
+                "variable_name": self.variable_name,
                 "description": self.description,
                 "items": [item.describe() for item in self.items if item.visible],
             }

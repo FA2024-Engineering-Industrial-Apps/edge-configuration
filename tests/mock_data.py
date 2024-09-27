@@ -1,6 +1,4 @@
-from iem_model import AbstractAppConfig, StringField, NestedField, ListField
-from data_extraction import DataExtractor
-from llm_service import Mistral7b, Qwen25, Groq
+from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
 
 
 class AuthenticationData(NestedField):
@@ -41,38 +39,3 @@ class UserData(AbstractAppConfig):
 
     def generate_prompt_string(self):
         return "Needs a username and a string"
-
-
-dataObj = UserData()
-
-print(dataObj.describe())
-
-print("\n---\n")
-
-print(dataObj.to_json())
-
-extractor = DataExtractor(dataObj)
-
-messages = [
-    {
-        "role": "user",
-        "content": "The name of the user is John Doe and he has 2 contacts.",
-    }
-]
-
-extractor.update_data(messages)
-
-messages_2 = [
-    {
-        "role": "user",
-        "content": "The phone number of the first contact is 1234567890 and the address is 1234 Elm Street. For the second contact I only know the phone number which is 0987654321.",
-    }
-]
-
-extractor.update_data(messages_2)
-
-print(dataObj.describe())
-
-print("\n---\n")
-
-print(dataObj.to_json())
