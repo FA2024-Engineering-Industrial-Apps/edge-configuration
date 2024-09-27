@@ -11,7 +11,7 @@ class AppType(Enum):
 class ConfigConverter:
 
     def _transform_config_for_ua_connector(self, config: dict, device: DetailedDevice) -> dict:
-        with open('opc_ua_connector_config.json') as f:
+        with open('configs/opc_ua_connector/OPCConf.json') as f:
             data = f.read()
         final_cfg = json.loads(data)
 
