@@ -665,12 +665,16 @@ class UAConnectorConfig(AbstractAppConfig):
             self.portField.value,
         )
 
-
-# Full config
 class DocumentationDatabusConfig(AbstractAppConfig):
-    pass
-
-
+    userConfig: ListField = ListField(
+        variable_name="user-config",
+        description="List of users that are allowed to publish and subscribe to topics.",
+        blueprint=DatabusUserConfig(
+            variable_name="user",
+            description="Databus user config."
+        )
+    )
+    
 # For testing TODO
 class DatabusConfig(AbstractAppConfig):
     pass
