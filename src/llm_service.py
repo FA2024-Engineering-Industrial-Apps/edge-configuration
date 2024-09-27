@@ -27,15 +27,19 @@ class LLM(ABC):
     system_prompt: str
     model_name: str
 
-    def prepare_prompt(self, input_prompt: str, history: list, config: AppModel) -> List[Dict]:
+    def prepare_prompt(
+        self, input_prompt: str, history: list, config: AppModel
+    ) -> List[Dict]:
         msg = history[-2:]
         if self.system_prompt:
             msg.insert(0, {"role": "system", "content": self.system_prompt})
-        msg.append({
+        msg.append(
+            {
                 "role": "system",
                 "content": "The current configuration is: "
                 + config.generate_prompt_string(),
-            })
+            }
+        )
         msg.append({"role": "user", "content": input_prompt})
         return msg
 
@@ -92,6 +96,18 @@ class GPT4o(LLM):
         self.client = OpenAI()
         self.system_prompt = system_prompt
         self.model_name = "gpt-4o"
+
+
+class GPT4Turbo(LLM):
+
+    def __init__(self, system_prompt: str = ""):
+
+        if os.environ.get("OPENAI_API_KEY") is None:
+            raise LLMInteractionException("OPENAI_API_KEY environment variable not set")
+
+        self.client = OpenAI()
+        self.system_prompt = system_prompt
+        self.model_name = "gpt-4-turbo"
 
 
 class Mistral7b(LLM):
