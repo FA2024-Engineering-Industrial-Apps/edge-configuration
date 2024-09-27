@@ -16,47 +16,38 @@ if target == "Edge Config":
     strategy = EdgeConfigStrategy()
 
 
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 
-
-
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
 if prompt := st.chat_input("Write something"):
-    with st.chat_message("user"):
-        st.markdown(prompt)
     # Calling the LLM and possibly change values
-    response_message, current_model = strategy.send_message(prompt, st.session_state.messages)
+    with st.chat_message("user"):
+     st.markdown(prompt)
+    
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.session_state.messages.append({"role": "assistant", "content": response_message})
-    # TODO: Add an potential extra system promt to st.session_state.messages to tell the LLM
-    # that a validation failed and the value was not set
 
+    response_message, current_model = strategy.send_message(prompt, st.session_state.messages)
 
     st.chat_message("assistant").markdown(
         f"""
-        ```javascript
-        {response_message}
-        """
+          ```javascript
+            {response_message}
+            """
     )
+    st.session_state.messages.append({"role": "assistant", "content": response_message})
+
+    # TODO: Add an potential extra system promt to st.session_state.messages to tell the LLM
+    # that a validation failed and the value was not se
+
     with st.sidebar:
         st.subheader("Configuration Parameters")
         st.markdown(current_model.generate_prompt_sidebar())
-# Only display messages submitted during the session (no re-display of old messages on load)
-for message in st.session_state.messages:
-    if message["role"] == "user":
-        with st.chat_message("user"):
-            st.markdown(message["content"])
-    elif message["role"] == "assistant":
-        with st.chat_message("assistant"):
-            st.markdown(message["content"])
- # Display parameters or updates
-    #with st.sidebar:
-     #   st.subheader("Configuration Parameters")
-      #  st.markdown("Name")
-       # st.markdown("OPC-UA URL")
-        #st.markdown("Port number")
+
 
 
 
