@@ -18,15 +18,10 @@ if target == "Edge Config":
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
-        # Create two columns: left for chat, right for displaying parameters or updates
 
 
-        for message in st.session_state.messages:
-            if message["role"] == "system":
-                continue
 
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+
 
 if prompt := st.chat_input("Write something"):
     with st.chat_message("user"):
@@ -43,7 +38,14 @@ if prompt := st.chat_input("Write something"):
     with st.sidebar:
         st.subheader("Configuration Parameters")
         st.markdown(current_model.generate_prompt_sidebar())
-
+# Only display messages submitted during the session (no re-display of old messages on load)
+for message in st.session_state.messages:
+    if message["role"] == "user":
+        with st.chat_message("user"):
+            st.markdown(message["content"])
+    elif message["role"] == "assistant":
+        with st.chat_message("assistant"):
+            st.markdown(message["content"])
  # Display parameters or updates
     #with st.sidebar:
      #   st.subheader("Configuration Parameters")

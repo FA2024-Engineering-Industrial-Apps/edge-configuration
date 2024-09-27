@@ -64,6 +64,10 @@ Ask the user for the values, and answer his questions about the apps and the fie
     def send_message(self, prompt: str, history: list) -> (str, AbstractAppConfig):
         # print(history)
         nl_response = self.nl_service.retrieve_model(prompt, self.config_object, history)
+        updated_history = history + [
+            {"role": "user", "content": prompt},
+            {"role": "assistant", "content": nl_response},
+        ]
         self.data_extractor.update_data(history + [{
             "role": "user",
             "content": prompt
