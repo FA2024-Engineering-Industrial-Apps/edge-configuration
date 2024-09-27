@@ -26,7 +26,7 @@ def get_device_list() -> list[Device]:
     )
 
     raw_devices = device_response.json()["data"]
-    print(raw_devices)
+
     devices = []
     for raw_device in raw_devices:
         devices.append(

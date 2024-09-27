@@ -18,6 +18,7 @@ class App(BaseModel):
     id: str
     configs: list[AppConfig]
     projectId: str
+    versionId: str
 
 
 def get_app_details(app_id: str) -> App:
@@ -40,12 +41,14 @@ def get_app_details(app_id: str) -> App:
         )
 
     raw_app_data = response.json()
+    
     my_app = App(
         name=raw_app_data["title"],
         description=raw_app_data["description"],
         id=raw_app_data["id"],
         configs=[],
         projectId=raw_app_data["projectId"],
+        versionId=raw_app_data["appVersions"][-1]['versionId']
     )
 
     response = requests.get(

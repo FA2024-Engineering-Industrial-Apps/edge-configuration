@@ -20,8 +20,8 @@ def install_app_on_edge_device(
     infoMap = {"devices": [device_id] }
 
     if config:
-        infoMap["config"] = config
-        
+        infoMap["configs"] = config
+    print(infoMap)
     response = requests.post(
         IEM_API + f"/batches",
         params={"appid": app_id, "operation": "installApplication"},
