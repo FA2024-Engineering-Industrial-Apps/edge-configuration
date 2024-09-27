@@ -27,12 +27,11 @@ if prompt := st.chat_input("Write something"):
     with st.chat_message("user"):
         st.markdown(prompt)
     # Calling the LLM and possibly change values
-    response_message, current_model = strategy.send_message(prompt, st.session_state.messages)
+    response_message, current_model, validationPromts = strategy.send_message(prompt, st.session_state.messages)
     st.session_state.messages.append({"role": "user", "content": prompt})
+    for validationPromt in validationPromts:
+        st.session_state.messages.append({"role": "system", "content": validationPromt})
     st.session_state.messages.append({"role": "assistant", "content": response_message})
-    # TODO: Add an potential extra system promt to st.session_state.messages to tell the LLM
-    # that a validation failed and the value was not set
-
 
     st.chat_message("assistant").markdown(
         f"""

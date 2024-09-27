@@ -6,7 +6,7 @@ from iem_model import App, UAConnectorConfig, AbstractAppConfig
 from data_extraction import DataExtractor
 from llm_service import GPT4o, GPT4Turbo
 from nl_service import NLService
-from typing import Tuple
+from typing import List, Tuple
 
 
 class Strategy(ABC):
@@ -61,8 +61,11 @@ Ask the user for the values, and answer his questions about the apps and the fie
         )
         self.data_extractor = DataExtractor(self.config_object, llm=GPT4Turbo())
 
-    def send_message(self, prompt: str, history: list) -> Tuple[str, AbstractAppConfig]:
+    def send_message(self, prompt: str, history: list) -> Tuple[str, AbstractAppConfig, List[str]]:
         # print(history)
+
+        # TODO: change that the chatting LLM gets fed the validation promt together with the user promt
+
         nl_response = self.nl_service.retrieve_model(
             prompt, self.config_object, history
         )
@@ -70,5 +73,6 @@ Ask the user for the values, and answer his questions about the apps and the fie
             {"role": "user", "content": prompt},
             {"role": "assistant", "content": nl_response},
         ]
-        self.data_extractor.update_data(history + [{"role": "user", "content": prompt}])
-        return nl_response, self.config_object
+        validationPromts = self.data_extractor.update_data(history + [{"role": "user", "content": prompt}])
+
+        return nl_response, self.config_object, validationPromts

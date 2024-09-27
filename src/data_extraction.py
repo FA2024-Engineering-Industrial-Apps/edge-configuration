@@ -28,13 +28,14 @@ class DataExtractor:
 
         self.tool_descriptions = [i.llm_description for i in tools]
 
-    def update_data(self, messages: List[Dict]) -> str:
+    def update_data(self, messages: List[Dict]) -> List[str]:
         self._refresh_tools()
 
         response_pair = self.client.prompt_tool(messages, self.tool_descriptions)
         # response_message = response_pair.response
         tool_calls = response_pair.tool_calls
         extractor_message = response_pair.response
+        validationPromts: List[str] = []
         print(f"The extractor message is:\n{extractor_message}\n\n")
         print(f"tool_calls:\n {tool_calls}\n\n")
         if not tool_calls:
@@ -52,13 +53,16 @@ class DataExtractor:
                     **function_args,
                     )
                 print(f"Executing {function_name} was succesful!")
-                validationMessage = None
+                # No adding to validationPromts
             except ValidationException:
                 print(f"Validation Error concerning {function_name}!")
-                # TODO: Feedback to GPT
-                validationMessage = "The execution of the"
 
-            print(f"Validation Message:\n{validationMessage}")
-            return validationMessage
+                # TODO: Improve validationMessage (Promt from role system to LLM)
+                validationPromts.append(f"""The execution of the {function_name} function failed due a Validation Error 
+                i.e. the given value did not meet the requirements for the field. 
+                Please regard this and ask the user for a new value.\n""")
+
+            print(f"Validation Message:\n{validationPromts}")
+            return validationPromts
                 
                 
