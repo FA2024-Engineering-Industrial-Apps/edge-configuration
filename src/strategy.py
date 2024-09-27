@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from llm import retrieve_model
-from iem_model import App, UAConnectorConfig, AbstractAppConfig
+from src.models.iem_model import App, UAConnectorConfig, AbstractAppConfig
 from data_extraction import DataExtractor
 from llm_service import GPT4o, GPT4Turbo
 from nl_service import NLService

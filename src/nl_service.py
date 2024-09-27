@@ -1,4 +1,4 @@
-from iem_model import AbstractAppConfig
+from src.models.iem_model import AbstractAppConfig
 from llm_service import GPT4o
 
 

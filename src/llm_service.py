@@ -9,7 +9,7 @@ from enum import Enum
 import json
 from error_handling import LLMInteractionException
 
-from iem_model import AbstractAppConfig
+from src.models.iem_model import AbstractAppConfig
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional
 

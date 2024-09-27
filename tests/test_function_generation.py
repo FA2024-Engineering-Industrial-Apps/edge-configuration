@@ -1,6 +1,6 @@
 import pytest
 
-from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
+from src.models.iem_model import AbstractAppConfig, StringField, NestedField, ListField
 from src.data_extraction import DataExtractor
 from .mock_data import AuthenticationData, ContactInformation, ContactList, UserData
 

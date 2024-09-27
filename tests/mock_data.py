@@ -1,4 +1,4 @@
-from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
+from src.models.iem_model import AbstractAppConfig, StringField, NestedField, ListField
 
 
 class AuthenticationData(NestedField):
