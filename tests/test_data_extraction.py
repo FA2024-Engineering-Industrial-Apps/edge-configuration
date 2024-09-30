@@ -4,13 +4,13 @@ from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
 from src.data_extraction import DataExtractor
 from .mock_data_upa_config import UAConnectorConfig
 from .mock_data import AmbiguousData
-from src.llm_service import GPT4Turbo
+from src.llm_service import GPT4Turbo, GPT4o
 
 
 @pytest.mark.expensive
 def test_extraction_scenario_1():
     dataObj = UAConnectorConfig()
-    data_extractor = DataExtractor(dataObj, llm=GPT4Turbo())
+    data_extractor = DataExtractor(dataObj, llm=GPT4o())
     messages = [
         {
             "role": "system",
@@ -34,6 +34,7 @@ def test_extraction_scenario_1():
             Ask the user for the values, and answer his questions about the apps and the fields.
 
             If there is nonsensical information for setting one of the values, skip this value but continue with the next one and call the setter function.
+            Only skip function calls you need to skip! There is no all or nothing.
             """.format(
                 dataObj.describe()
             ),

@@ -50,11 +50,9 @@ class DataExtractor:
                 print(f"Trying to call function {function_name} with {function_args}")
                 function_to_call(
                     **function_args,
-                    )
+                )
                 print(f"Executing {function_name} was succesful!")
             except ValidationException:
                 print(f"Validation Error concerning {function_name}!")
                 # TODO: Feedback to GPT
                 # Possibly a solution:
-                
-                
