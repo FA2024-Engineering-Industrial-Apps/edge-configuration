@@ -72,9 +72,9 @@ class EnumField(Field, ABC):
 
     def setter_name(self, prefix) -> str:
         if not prefix:
-            return f"{self.variable_name}-set_value"
+            return f"{self.variable_name.replace(' ', '_')}-set_value"
         else:
-            return f"{prefix}-{self.variable_name}-set_value"
+            return f"{prefix}-{self.variable_name.replace(' ', '_')}-set_value"
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         if not self.setter_active:
@@ -175,9 +175,9 @@ class ListField(Field):
 
     def create_item_name(self, prefix: str) -> str:
         if prefix == "":
-            return f"{self.variable_name}-create_item"
+            return f"{self.variable_name.replace(' ', '_')}-create_item"
         else:
-            return f"{prefix}-{self.variable_name}-create_item"
+            return f"{prefix}-{self.variable_name.replace(' ', '_')}-create_item"
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         all_pairs = []
@@ -236,9 +236,9 @@ class NestedField(Field, ABC):
                     getattr(field_value, "generate_tool_functions")
                 ):
                     if prefix:
-                        new_prefix = prefix + "-" + self.variable_name
+                        new_prefix = prefix + "-" + self.variable_name.replace(" ", "_")
                     else:
-                        new_prefix = self.variable_name
+                        new_prefix = self.variable_name.replace(" ", "_")
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         new_prefix
                     )
@@ -314,9 +314,9 @@ class ValueField(Field, ABC):
     # returns a senseful name of the set_value function used for the llm description
     def setter_name(self, prefix) -> str:
         if not prefix:
-            return f"{self.variable_name}-set_value"
+            return f"{self.variable_name.replace(' ', '_')}-set_value"
         else:
-            return f"{prefix}-{self.variable_name}-set_value"
+            return f"{prefix}-{self.variable_name.replace(' ', '_')}-set_value"
 
     @abstractmethod
     def data_type(self) -> str:
