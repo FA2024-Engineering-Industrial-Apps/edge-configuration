@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 from strategy import Strategy, EdgeConfigStrategy
+import json
 
 st.title("Configuration Generator")
 
@@ -13,7 +14,7 @@ target = st.radio("Target", ["Edge Config"])
 strategy: Strategy = None  # type: ignore
 
 if target == "Edge Config":
-    if 'strategy' not in st.session_state:
+    if "strategy" not in st.session_state:
         st.session_state["strategy"] = EdgeConfigStrategy()
     strategy = st.session_state["strategy"]
 
@@ -47,7 +48,12 @@ if prompt := st.chat_input("Write something"):
 
     with st.sidebar:
         st.subheader("Configuration Parameters")
-        st.markdown(current_model.generate_prompt_sidebar())
+        st.markdown(
+            f"""
+        ```javascript
+        {json.dumps(current_model.generate_prompt_sidebar(), indent=2)}
+        """
+        )
 
 
 st.divider()
