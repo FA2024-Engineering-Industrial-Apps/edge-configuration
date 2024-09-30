@@ -1,0 +1,32 @@
+{
+  "serverSecurity": {
+    "serverInfo": {
+      "capabilities": [
+        "None",
+        "Sign-Basic256Sha256",
+        "Sign&Encrypt-Basic256Sha256"
+      ],
+      "userSelection": ["None"],
+      "pki": {
+        "isCertGenerated": true,
+        "certificate": { "fileName": "", "data": "" },
+        "key": { "fileName": "", "data": "" },
+        "ca": { "fileName": "", "data": "" }
+      }
+    },
+    "clientInfo": { "autoResolveClientCert": true, "pki": [] }
+  },
+  "userAuthentication": {
+    "isGuestEnabled": true,
+    "isAuthEnabled": false,
+    "credentials": [],
+    "tokens": []
+  },
+  "HAConfiguration": {
+    "HAenable": false,
+    "saveFrequencyInMinutes": 2,
+    "priority": [],
+    "timeSpan": { "enable": true, "valueInMinutes": 5 },
+    "maxDataValues": { "enable": false, "numberOfValues": 0 }
+  }
+}

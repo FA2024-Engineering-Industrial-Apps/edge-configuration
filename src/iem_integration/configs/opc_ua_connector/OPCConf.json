@@ -1,0 +1,104 @@
+{
+  "UIConfig": {
+    "datapoints": {
+      "S7": [],
+      "S7Plus": [],
+      "OPCUA": [
+        {
+          "name": "testPLC",
+          "tags": [
+            {
+              "name": "test",
+              "address": "web.de",
+              "dataType": "Bool",
+              "connectionType": "OPCUA",
+              "acquisitionCycle": 1000,
+              "acquisitionMode": "CyclicOnChange",
+              "accessMode": "r",
+              "comments": "Leanders testtag",
+              "operationType": "Full",
+              "deployedState": 1,
+              "isDeployed": true,
+              "id": 101,
+              "isSelected": true,
+              "hidden": false
+            }
+          ],
+          "isSelected": true,
+          "operationType": "Full",
+          "isDeployed": true,
+          "deployedState": 1,
+          "id": 100,
+          "isBrowse": false,
+          "OPCUAUrl": "opc.tcp://192.123.234.134",
+          "portNumber": 48010,
+          "userID": "edge",
+          "password": "U2FsdGVkX1//lvGIpifL1CaBhBazlOD7Rega4TlT/a0=",
+          "authenticationMode": 2,
+          "encryptionMode": 1,
+          "securityPolicy": 1,
+          "connState": "Good",
+          "hidden": false
+        }
+      ]
+    },
+    "groupFlag": true,
+    "deviceName": "Romabruegge",
+    "username": "edge",
+    "idCounter": 102,
+    "globalSelection": true,
+    "password": "U2FsdGVkX1+MNf+rxtiLYhZ35Z7xKVepSs9G/nN4YMs=",
+    "certificates": [],
+    "dbservicename": "ie-databus",
+    "version": "1.5",
+    "seqID": "IqLTt",
+    "deltaButton": false,
+    "IEDBConnState": { "alarmData": false, "metaData": false, "tagData": false }
+  },
+  "SystemData": {
+    "twoWayConfig": {},
+    "browseConfig": { "browse": {} },
+    "certConfig": {},
+    "deviceDetails": {
+      "deviceName": "Romabruegge",
+      "deviceId": "2672ceefded041948d82820056d1de0e",
+      "configId": "3d24e7d090bf44d8be2adaa770abd162",
+      "versionId": "3l88P6KctDviakcMVSn5D0FtvS63ECAb",
+      "appId": "456e041339e744caa9514a1c86536067"
+    },
+    "configVersion": "1.3.0"
+  },
+  "ConfigData": {
+    "request": "UPDATE_CONFIG",
+    "datapoints": {
+      "OPCUA": [
+        {
+          "name": "testPLC",
+          "tags": [
+            {
+              "name": "test",
+              "address": "web.de",
+              "dataType": "Bool",
+              "acquisitionCycle": 1000,
+              "acquisitionMode": "CyclicOnChange",
+              "accessMode": "r",
+              "comments": "Leanders testtag",
+              "id": 101
+            }
+          ],
+          "operationType": "Full",
+          "id": 100,
+          "isBrowse": false,
+          "OPCUAUrl": "opc.tcp://192.123.234.134",
+          "portNumber": 48010,
+          "userID": "edge",
+          "password": "U2FsdGVkX1//lvGIpifL1CaBhBazlOD7Rega4TlT/a0=",
+          "authenticationMode": 2,
+          "encryptionMode": 1,
+          "securityPolicy": 1,
+          "connState": "No State"
+        }
+      ]
+    }
+  }
+}
