@@ -3,13 +3,14 @@ import pytest
 from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
 from src.data_extraction import DataExtractor
 from .mock_data_upa_config import UAConnectorConfig
-from src.llm_service import GPT4Turbo
+from .mock_data import AmbiguousData
+from src.llm_service import GPT4Turbo, GPT4o
 
 
 @pytest.mark.expensive
 def test_extraction_scenario_1():
     dataObj = UAConnectorConfig()
-    data_extractor = DataExtractor(dataObj, llm=GPT4Turbo())
+    data_extractor = DataExtractor(dataObj, llm=GPT4o())
     messages = [
         {
             "role": "system",
@@ -33,6 +34,7 @@ def test_extraction_scenario_1():
             Ask the user for the values, and answer his questions about the apps and the fields.
 
             If there is nonsensical information for setting one of the values, skip this value but continue with the next one and call the setter function.
+            Only skip function calls you need to skip! There is no all or nothing.
             """.format(
                 dataObj.describe()
             ),
@@ -74,3 +76,50 @@ def test_extraction_scenario_1():
 
     assert dataObj.nameField.value == "Timo Schmidt"
     assert dataObj.urlField.value == "http://timo.schmidt.de"
+
+
+@pytest.mark.expensive
+def test_ambigous_data():
+    dataObj = AmbiguousData()
+    data_extractor = DataExtractor(dataObj, llm=GPT4Turbo())
+
+    messages = [
+        {
+            "role": "system",
+            "content": """
+            You are an expert for configuring Siemens IEM.
+            There are many different kinds of customers, some more experienced, but also beginners, which do not how to
+            configure the IEM.
+            The Siemens IEM eco system consists of different apps, which each have to be configured.
+            Down below you find a list of all available apps in the IEM eco system.
+            Do not use any other information about IEM you have except for the app list below.
+            Each app consists of an "Appname", an "App-Description", which describes what the app does,
+            and a config.
+            Each config consists of fields, which have to be filled.
+            Each field has a name, how the field is called in the user interface, and a description, what should be entered
+            in this field.
+
+            {0}
+
+            You help the user to configure any app he wants to use.
+            For this every field of every app config he wants to use has to be filled with a value.
+            Ask the user for the values, and answer his questions about the apps and the fields.
+
+            If there is nonsensical information for setting one of the values, skip this value but continue with the next one and call the setter function.
+            """.format(
+                dataObj.describe()
+            ),
+        },
+        {
+            "role": "user",
+            "content": "I want to configure the server and client. The client is called 'Martin-Machine' and is implemented in JavaScript. The server is called 'Simon-Server' and is implemented in Python.",
+        },
+    ]
+
+    data_extractor.update_data(messages)
+
+    assert dataObj.client.name.value == "Martin-Machine"
+    assert dataObj.client.technology.value == "JavaScript"
+
+    assert dataObj.server.name.value == "Simon-Server"
+    assert dataObj.server.technology.value == "Python"
