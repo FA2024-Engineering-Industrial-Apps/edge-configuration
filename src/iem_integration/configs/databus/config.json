@@ -1,0 +1,125 @@
+{
+  "user-config": [
+    {
+      "password": "PBKDF2$sha512$100000$oSGCklv0nb+L7kf9VEH44w==$/W7maaVZMcneRLDRevIFT5PZvyaIlDQcW5hophbpcaWqQql+pAKe4cwzGHrNixyC6NynPJF7PkACNTbzILRf8A==",
+      "username": "edge",
+      "created-at": "2024-09-23T12:02:27.960Z",
+      "last-modified-at": 1727092948025,
+      "id": "b57b187b-e1f5-4ea3-97a5-05772a58b7d2",
+      "topics": [
+        {
+          "topic-name": "ie/#",
+          "access-rights": "both",
+          "id": "b57b187b-e1f5-4ea3-97a5-05772a58b7d2_94d62985-5375-4f46-90b8-0ad0524cf876",
+          "created-at": "2024-09-23T12:02:28.025Z",
+          "last-modified-at": 1727092948025
+        }
+      ]
+    },
+    {
+      "password": "PBKDF2$sha512$100000$Qa86VZTzF2/d63oDF9JNzw==$K3wDJw0qe+qN5diI2NKSVv+4wPTvu+B3J6mdgZAzqjCDqDEtGpw7G1lKdhCxEswWpOjdowyt8ZW84hO0eGq1zw==",
+      "username": "edgexess",
+      "created-at": "2024-09-23T16:03:21.938Z",
+      "last-modified-at": 1727107401938,
+      "id": "f630ddcb-f7bd-4784-8e74-d12c7c473513",
+      "topics": [
+        {
+          "topic-name": "$SYS/broker/connection/+/state",
+          "access-rights": "both",
+          "isSystemTopic": true,
+          "id": "f630ddcb-f7bd-4784-8e74-d12c7c473513_e26bca4a-db37-44c5-a6fd-95c2b146a202",
+          "created-at": "2024-09-23T16:03:21.981Z",
+          "last-modified-at": 1727107401981
+        },
+        {
+          "topic-name": "Regnitzbruegge/ie/#",
+          "access-rights": "both",
+          "isSystemTopic": false,
+          "id": "f630ddcb-f7bd-4784-8e74-d12c7c473513_69a0ceec-d5fd-4a5e-a4ed-5b0089e56247",
+          "created-at": "2024-09-23T16:03:21.981Z",
+          "last-modified-at": 1727107401981
+        },
+        {
+          "topic-name": "ie/#",
+          "access-rights": "both",
+          "isSystemTopic": false,
+          "id": "f630ddcb-f7bd-4784-8e74-d12c7c473513_9cabfa99-3adb-4251-97da-8b6c8f1ffbba",
+          "created-at": "2024-09-23T16:03:21.981Z",
+          "last-modified-at": 1727107401981
+        }
+      ]
+    },
+    {
+      "username": "system_user",
+      "password": "PBKDF2$sha512$100000$XOT/vwOMLfq6i1A84qY1ag==$gK+/zctvwxXCXVfiV46NOVkcNqL9DTwTvnADT98AoHF3xztlb5alrvyh+mvPAeKjIo+0w634ExvVJvmUT/G96g==",
+      "created-at": "2024-09-27T12:37:38.260Z",
+      "id": "8e8b10b5-be62-41d4-b875-0d44b923dfaa",
+      "isSystemUser": true,
+      "topics": [
+        {
+          "topic-name": "#",
+          "access-rights": "subscribe",
+          "id": "8e8b10b5-be62-41d4-b875-0d44b923dfaa_d1fa28c6-7420-4ca9-9814-0a0d06c2fe9d",
+          "isSystemTopic": true,
+          "created-at": "2024-09-27T12:37:38.260Z",
+          "last-modified-at": 1727440658260
+        }
+      ],
+      "last-modified-at": 1727440658260
+    }
+  ],
+  "advanced-config": {
+    "general": {
+      "hostname": "ie-databus",
+      "plugin-type": "go-auth",
+      "allowed-access-rights": ["none", "subscribe", "both"]
+    },
+    "server-settings": {
+      "protocol": "mqtt",
+      "port": "1883",
+      "allow-anonymous": false,
+      "max-keepalive": "",
+      "max-connections": "1000",
+      "max-qos": "2",
+      "message-size-limit": "",
+      "max-client-connections": "-1",
+      "auto-gen-client-id": true,
+      "auto-id-prefix": "",
+      "persistent-client-expiration": "",
+      "persistence": {
+        "is-enabled": true,
+        "autosave-interval": "300",
+        "autosave-on-changes": false,
+        "filename": "mosquitto.db",
+        "path": "/home/mosquitto/persistence/"
+      },
+      "logging": {
+        "is-enabled": true,
+        "log-facility": "",
+        "log-type": ["all"],
+        "log-destination": ["topic"],
+        "connection-messages": true,
+        "log-timestamp": { "is-enabled": true, "format": "%Y-%m-%dT%H:%M:%S" }
+      }
+    },
+    "ha-config": { "storage-settings": { "clear-space": false } }
+  },
+  "config-version": "1.4.1",
+  "live_view_config": {
+    "topics": [
+      {
+        "id": "7d173ec8660d461fb8dbc1d69e1a0202_b57b187b-e1f5-4ea3-97a5-05772a58b7d2_94d62985-5375-4f46-90b8-0ad0524cf876",
+        "topic-name": "ie/#",
+        "last-time-published": "NA",
+        "topic-status": false,
+        "childTopics": [],
+        "isChecked": true,
+        "isCollapse": true,
+        "isAccordion": false,
+        "isMonitor": false
+      }
+    ],
+    "monitor-status": false,
+    "monitor-duration": 600
+  }
+}

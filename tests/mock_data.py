@@ -85,3 +85,6 @@ class AmbiguousData(AbstractAppConfig):
 
     def generate_prompt_string(self):
         return str(self.to_json())
+
+    def generate_prompt_sidebar(self):
+        pass
