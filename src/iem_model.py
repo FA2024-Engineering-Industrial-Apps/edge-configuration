@@ -1,5 +1,8 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Callable, Optional
+
+# from builtins import classmethod
+from typing import Any, Dict, List, Callable, Optional, Type
 from pydantic.dataclasses import dataclass
 from pydantic import BaseModel, ConfigDict
 from error_handling import ValidationException
@@ -45,6 +48,10 @@ class Field(ABC, BaseModel):
 
     @abstractmethod
     def to_json(self) -> Dict:
+        pass
+
+    @abstractmethod
+    def fill_from_json(self, json: Any):
         pass
 
 
@@ -112,6 +119,10 @@ class EnumField(Field, ABC):
             return {"value": self.mapping[self.key]}
         else:
             return {}
+
+    # Idk how this enum works
+    def fill_from_json(self, json: Any):
+        raise NotImplementedError("TODO: Implement")
 
 
 class ListField(Field):
@@ -200,6 +211,13 @@ class ListField(Field):
         else:
             return {}
 
+    def fill_from_json(self, json: Any):
+        if isinstance(json, list):
+            for i in json:
+                new_item = self.blueprint.model_copy(deep=True)
+                new_item.fill_from_json(i)
+                self.items.append(new_item)
+
 
 # general definition of a Field containing other Fields
 class NestedField(Field, ABC):
@@ -266,6 +284,14 @@ class NestedField(Field, ABC):
                 if field_value.visible:
                     base[field_name] = field_value.to_json()["value"]
         return {"value": base}
+
+    def fill_from_json(self, json: Any):
+        if isinstance(json, dict):
+            for k, v in self.__dict__.items():
+                if k in json:
+                    v.fill_from_json(json[k])
+        else:
+            raise ValueError(f"NestedField could not be created from {json}")
 
 
 # general definition of a field containing a single value
@@ -336,6 +362,9 @@ class ValueField(Field, ABC):
             return {"value": self.value}
         else:
             return {}
+
+    def fill_from_json(self, json: Any):
+        self.set_value(json)
 
 
 class StringField(ValueField):
@@ -430,6 +459,11 @@ class AbstractAppConfig(ABC, BaseModel):
                 if field_value.visible:
                     base[field_name] = field_value.to_json()["value"]
         return base
+
+    def fill_from_json(self, json: Dict):
+        for k, v in self.__dict__.items():
+            if k in json:
+                v.fill_from_json(json[k])
 
 
 # TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
@@ -664,39 +698,44 @@ class UAConnectorConfig(AbstractAppConfig):
             self.urlField.value,
             self.portField.value,
         )
-        
+
+
 class DatabusTopicConfig(NestedField):
     topic_name: StringField = StringField(
         variable_name="topic-name",
         description="Name of the MQQT topic a user can utilize for communication",
-        value=None
+        value=None,
     )
     access_rights: EnumField = EnumField(
         variable_name="access-rights",
         description="Access right of the user to the topic. Can be No Permission, Subscribe Only, Publish and Subscribe",
         key=None,
-        mapping={"No Permission": "none", "Subscribe Only": "subscribe", "Publish and Subscribe": "both"}
+        mapping={
+            "No Permission": "none",
+            "Subscribe Only": "subscribe",
+            "Publish and Subscribe": "both",
+        },
     )
-        
+
+
 class DatabusUserConfig(NestedField):
     username: StringField = StringField(
-        variable_name="username",
-        description="Name of the Databus user.",
-        value="edge"
+        variable_name="username", description="Name of the Databus user.", value="edge"
     )
     password: StringField = StringField(
         variable_name="password",
         description="Password of the Databus user.",
-        value=None
+        value=None,
     )
     topics: ListField = ListField(
         variable_name="topics",
         description="List of MQTT topics that user can utilize for communication",
         blueprint=DatabusTopicConfig(
             variable_name="topic",
-            description="Description of a single topic that user can use for communication"
-        )
+            description="Description of a single topic that user can use for communication",
+        ),
     )
+
 
 class DatabusLiveViewConfig(NestedField):
     # TODO: Maybe more fields are necessary??
@@ -706,36 +745,37 @@ class DatabusLiveViewConfig(NestedField):
         blueprint=StringField(
             variable_name="topic-name",
             description="Name of the topic that is monitored live",
-            value=None
-        )
+            value=None,
+        ),
     )
+
 
 class DocumentationDatabusConfig(AbstractAppConfig):
     userConfig: ListField = ListField(
         variable_name="user-config",
         description="List of users that are allowed to publish and subscribe to topics.",
         blueprint=DatabusUserConfig(
-            variable_name="user",
-            description="Databus user config."
-        )
+            variable_name="user", description="Databus user config."
+        ),
     )
     # A separate persistence config may be needed
     persistence: BoolField = BoolField(
         variable_name="is-enabled",
         description="Bool flag showing whether data persistency is enabled for databus (passing messages are backuped).",
-        value=None
+        value=None,
     )
     autosave_interval: EnumField = EnumField(
         variable_name="autosave-interval",
         description="Time intervals between data backups in case persistency is enabled. Can be 5 mins, 1 hour, 1 day.",
         key=None,
-        mapping={"5 mins": "300", "1 hour": "3600", "1 day": "86400"}
+        mapping={"5 mins": "300", "1 hour": "3600", "1 day": "86400"},
     )
     live_view_config: DatabusLiveViewConfig = DatabusLiveViewConfig(
         variable_name="live_view_config",
-        description="Config for live monitoring of communication through MQTT topics."
+        description="Config for live monitoring of communication through MQTT topics.",
     )
-    
+
+
 # For testing TODO
 class DatabusConfig(AbstractAppConfig):
     pass
