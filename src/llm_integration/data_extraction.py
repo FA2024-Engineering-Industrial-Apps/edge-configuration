@@ -25,9 +25,16 @@ class DataExtractor:
             self.function_lib[item.name] = item.fct
 
         self.tool_descriptions = [i.llm_description for i in tools]
+        print("tool fcts: " + str(self.tool_descriptions))
 
     def update_data(self, messages: List[Dict]):
         self._refresh_tools()
+        if self.client.system_prompt:
+            messages.insert(0, {
+                "user": "system",
+                "content": self.client.system_prompt
+            })
+        print(messages)
 
         response_pair = self.client.prompt_tool(messages, self.tool_descriptions)
         # response_message = response_pair.response

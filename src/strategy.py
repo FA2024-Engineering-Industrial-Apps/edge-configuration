@@ -7,6 +7,11 @@ from model.app_model import AppModel, App
 from llm_integration.data_extraction import DataExtractor
 from llm_integration.llm_service import GPT4o
 from llm_integration.nl_service import NLService
+from llm import retrieve_model
+from iem_model import App, UAConnectorConfig, AbstractAppConfig, AppModel, DocumentationUAConnectorConfig
+from data_extraction import DataExtractor
+from llm_service import GPT4o, GPT4Turbo
+from nl_service import NLService
 from typing import Tuple
 
 
@@ -18,6 +23,7 @@ class Strategy(ABC):
 
 
 class EdgeConfigStrategy(Strategy):
+    model = None
     system_prompt = """
     You are an expert for configuring Siemens IEM.
 There are many different kinds of customers, some more experienced, but also beginners, which do not how to
@@ -133,8 +139,8 @@ Currently, IEnsight offers the following features:
     opc_ua_connector = App(
         name="OPC_UA_CONNECTOR",
         description="A app which connects to a configured OPC UA Server and collects data from this.",
-        config=UAConnectorConfig(),
-        id="456e041339e744caa9514a1c86536067",
+        config=DocumentationUAConnectorConfig(),
+        id="456e041339e744caa9514a1c86536067"
     )
 
     def create_app_overview(self) -> str:
@@ -157,8 +163,9 @@ Currently, IEnsight offers the following features:
         )
 
         self.model: AppModel = AppModel()
-        self.model.apps = [self.opc_ua_connector]
-        self.nl_service = NLService(self.model, GPT4o(adapted_system_prompt))
+        self.model.apps = []
+        self.nl_service = NLService(self.model,
+                                    GPT4o(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.model)
 
     def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
@@ -168,5 +175,5 @@ Currently, IEnsight offers the following features:
             {"role": "user", "content": prompt},
             {"role": "assistant", "content": nl_response},
         ]
-        self.data_extractor.update_data(history + [{"role": "user", "content": prompt}])
+        self.data_extractor.update_data([{"role": "user", "content": prompt}])
         return nl_response, self.model

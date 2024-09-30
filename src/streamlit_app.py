@@ -13,7 +13,9 @@ target = st.radio("Target", ["Edge Config"])
 strategy: Strategy = None  # type: ignore
 
 if target == "Edge Config":
-    strategy = EdgeConfigStrategy()
+    if 'strategy' not in st.session_state:
+        st.session_state["strategy"] = EdgeConfigStrategy()
+    strategy = st.session_state["strategy"]
 
 
 if "messages" not in st.session_state:
