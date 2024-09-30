@@ -17,9 +17,9 @@ def install_app_on_edge_device(
 
     Returns:
         str: jobId on IEM
-    """    
+    """
 
-    infoMap = {"devices": [device_id] }
+    infoMap = {"devices": [device_id]}
 
     if config:
         infoMap["configs"] = config
@@ -35,7 +35,5 @@ def install_app_on_edge_device(
         raise ConnectionError(
             f"App installation failed for device {device_id} \n {response.text}"
         )
-    
+
     return response.json()["data"]
-
-

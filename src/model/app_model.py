@@ -86,13 +86,17 @@ class App:
 
         return [submit_fct, set_device_name_fct] + self.config.generate_tool_functions()
 
-    def generate_prompt_sidebar(self) -> str:
-        result = f"""
-        App-Name: {self.application_name}
-        Device Name: {self.installed_device_name}
-        Config: {self.config.generate_prompt_sidebar()}
-        """
-        return result
+    def generate_app_info(self) -> Dict:
+        base_info = {
+            "App-name": self.application_name,
+            "Device-name": self.installed_device_name,
+        }
+        parameter = self.config.to_json()
+
+        for k, v in parameter.items():
+            base_info[k] = v
+
+        return base_info
 
     def submit_to_iem(self):
         converter = ConfigConverter()
@@ -152,11 +156,12 @@ class AppModel:
         #print(result_list)
         return result_list
 
-    def generate_prompt_sidebar(self) -> str:
-        result = ""
+    def generate_prompt_sidebar(self) -> Dict:
+        result = {}
         for app in self.apps:
-            result += app.generate_prompt_sidebar()
-            result += "-----------------------------\n"
+            dct = app.generate_app_info()
+            for k, v in dct.items():
+                result[k] = v
         return result
 
     def add_app(self, val: str):
