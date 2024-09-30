@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 from strategy import Strategy, EdgeConfigStrategy
+from history import History
 
 st.title("Configuration Generator")
 
@@ -17,7 +18,7 @@ if target == "Edge Config":
 
 
     if "messages" not in st.session_state:
-        st.session_state.messages = []
+        st.session_state.messages = History()
 
 
 
@@ -26,6 +27,7 @@ if target == "Edge Config":
 if prompt := st.chat_input("Write something"):
     with st.chat_message("user"):
         st.markdown(prompt)
+    st.session_state.messages
     # Calling the LLM and possibly change values
     response_message, current_model, validationPromts = strategy.send_message(prompt, st.session_state.messages)
     st.session_state.messages.append({"role": "user", "content": prompt})

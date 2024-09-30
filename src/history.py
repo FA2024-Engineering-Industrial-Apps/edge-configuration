@@ -4,10 +4,10 @@ class History:
     def __init__(self):
         self.promtHistory = []
 
-    def addPromt(self, promt:dict):
+    def addPromt_withDict(self, promt:dict):
         self.promtHistory.append(dict)
 
-    def genPromt(role:str, message:str):
-        return {"role": role, "content": message}
+    def addPromt_withStrs(self, role:str, message:str):
+        self.promtHistory.append({"role": role, "content": message})
     
     
