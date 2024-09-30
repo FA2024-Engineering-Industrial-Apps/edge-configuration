@@ -4,7 +4,7 @@ from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
 from src.data_extraction import DataExtractor
 from .mock_data_upa_config import UAConnectorConfig
 from .mock_data import AmbiguousData
-from src.llm_service import GPT4Turbo, GPT4o
+from src.llm_service import GPT4o
 
 
 @pytest.mark.expensive
@@ -81,7 +81,7 @@ def test_extraction_scenario_1():
 @pytest.mark.expensive
 def test_ambigous_data():
     dataObj = AmbiguousData()
-    data_extractor = DataExtractor(dataObj, llm=GPT4Turbo())
+    data_extractor = DataExtractor(dataObj)
 
     messages = [
         {

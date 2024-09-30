@@ -95,10 +95,10 @@ class GPT4o(LLM):
 
         self.client = OpenAI()
         self.system_prompt = system_prompt
-        self.model_name = "gpt-4o"
+        self.model_name = "gpt-4o-2024-08-06"
 
 
-class GPT4Turbo(LLM):
+class GPTo1Mini(LLM):
 
     def __init__(self, system_prompt: str = ""):
 

@@ -2,10 +2,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List
 
-from llm import retrieve_model
 from iem_model import App, UAConnectorConfig, AbstractAppConfig, AppModel
 from data_extraction import DataExtractor
-from llm_service import GPT4o, GPT4Turbo
+from llm_service import GPT4o
 from nl_service import NLService
 from typing import Tuple
 
@@ -13,7 +12,7 @@ from typing import Tuple
 class Strategy(ABC):
 
     @abstractmethod
-    def send_message(self, prompt: str, history: list) -> Tuple[str, AbstractAppConfig]:
+    def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
         pass
 
 
@@ -47,7 +46,7 @@ If there is nonsensical information for setting one of the values, skip this val
         name="OPC_UA_CONNECTOR",
         description="A app which connects to a configured OPC UA Server and collects data from this.",
         config=UAConnectorConfig(),
-        id="456e041339e744caa9514a1c86536067"
+        id="456e041339e744caa9514a1c86536067",
     )
 
     def create_app_overview(self) -> str:
@@ -62,20 +61,15 @@ If there is nonsensical information for setting one of the values, skip this val
         )
 
     def __init__(self):
-        adapted_system_prompt = self.system_prompt.format(
-            self.create_app_overview()
-        )
+        adapted_system_prompt = self.system_prompt.format(self.create_app_overview())
         self.model: AppModel = AppModel()
         self.model.apps = [self.opc_ua_connector]
-        self.nl_service = NLService(self.model,
-                                    GPT4o(adapted_system_prompt))
+        self.nl_service = NLService(self.model, GPT4o(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.model)
 
     def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
         # print(history)
-        nl_response = self.nl_service.retrieve_model(
-            prompt, self.model, history
-        )
+        nl_response = self.nl_service.retrieve_model(prompt, self.model, history)
         updated_history = history + [
             {"role": "user", "content": prompt},
             {"role": "assistant", "content": nl_response},
