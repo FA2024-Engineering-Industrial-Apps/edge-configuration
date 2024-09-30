@@ -1,7 +1,5 @@
-from typing import List
-
-from iem_model import AbstractAppConfig, App, AppModel
-from llm_service import GPT4o
+from model.app_model import AppModel
+from llm_integration.llm_service import GPT4o
 
 
 class NLService:

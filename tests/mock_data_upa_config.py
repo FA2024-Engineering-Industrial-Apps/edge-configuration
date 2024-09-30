@@ -1,4 +1,4 @@
-from src.iem_model import (
+from model.iem_model import (
     AbstractAppConfig,
     StringField,
     NestedField,

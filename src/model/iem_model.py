@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from iem_base_model import *
+from model.iem_base_model import *
 
 
 # TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?

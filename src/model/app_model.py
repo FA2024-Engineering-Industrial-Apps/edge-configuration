@@ -7,8 +7,8 @@ from iem_integration.config_converter import ConfigConverter, AppType
 from iem_integration.constants import OPC_UA_CONNECTOR_APP_ID
 from iem_integration.devices import get_device_details
 
-from iem_base_model import *
-from iem_model import *
+from model.iem_base_model import *
+from model.iem_model import *
 
 
 # class containing all data of an app including its Config

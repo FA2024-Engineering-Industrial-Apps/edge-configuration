@@ -5,7 +5,7 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessageToolCall
 import os
 from error_handling import LLMInteractionException
 
-from app_model import AppModel
+from model.app_model import AppModel
 from abc import ABC
 from typing import List, Dict, Optional
 

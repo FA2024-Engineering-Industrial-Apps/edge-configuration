@@ -1,10 +1,10 @@
 import pytest
 
-from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
-from src.data_extraction import DataExtractor
+from model.iem_model import AbstractAppConfig, StringField, NestedField, ListField
+from llm_integration.data_extraction import DataExtractor
 from .mock_data_upa_config import UAConnectorConfig
 from .mock_data import AmbiguousData
-from src.llm_service import GPT4o
+from llm_integration.llm_service import GPT4o
 
 
 @pytest.mark.expensive
