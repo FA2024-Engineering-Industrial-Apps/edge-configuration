@@ -57,11 +57,11 @@ class Field(ABC, BaseModel):
 
 # For simplicity I assume that selector input is always a string
 class EnumField(Field, ABC):
-    mapping: Dict[str, Any]
-    key: Any
+    enum_mapping: Dict[str, Any]
+    enum_key: Any
 
     def validate_value(self, key: str) -> bool:
-        return key in self.mapping.keys()
+        return key in self.enum_mapping.keys()
 
     def set_value(self, key: str):
         if self.validate_value(key):
@@ -83,7 +83,7 @@ class EnumField(Field, ABC):
             "type": "function",
             "function": {
                 "name": self.setter_name(prefix),
-                "description": f"Select value for selector {self.variable_name}. Available values are {' '.join(self.mapping.keys())}",
+                "description": f"Select value for selector {self.variable_name}. Available values are {' '.join(self.enum_mapping.keys())}",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -109,20 +109,24 @@ class EnumField(Field, ABC):
             return {
                 "variable_name": self.variable_name,
                 "description": self.description,
-                "value": self.mapping[self.key],
+                "value": self.enum_mapping[self.enum_key],
             }
         else:
             return {}
 
     def to_json(self) -> Dict:
         if self.visible:
-            return {"value": self.mapping[self.key]}
+            return {"value": self.enum_mapping[self.enum_key]}
         else:
             return {}
 
     # Idk how this enum works
     def fill_from_json(self, json: Any):
-        raise NotImplementedError("TODO: Implement")
+        for k, v in self.enum_mapping.items():
+            if v == json:
+                self.enum_key = k
+                return
+        raise ValueError(f"No matching key found for {json}")
 
 
 class ListField(Field):
@@ -526,8 +530,8 @@ class OPCUATagConfig(NestedField):
     acquisitionCycle: EnumField = EnumField(
         variable_name="acquisitionCycle",
         description="Time between consequent value checks in milliseconds or second. Available times: 10 milliseconds, 50 milliseconds, 100 milliseconds, 250 milliseconds, 500 milliseconds, 1 second, 2 second, 5 second, 10 second",
-        key=None,
-        mapping={
+        enum_key=None,
+        enum_mapping={
             "10 milliseconds": 10,
             "50 milliseconds": 50,
             "100 milliseconds": 100,
@@ -542,8 +546,8 @@ class OPCUATagConfig(NestedField):
     acquisitionMode: EnumField = EnumField(
         variable_name="acquisitionMode",
         description="Aquisition mode, describing when UAConnector will pull value from data node. Possible options: CyclicOnChange",
-        mapping={"CyclicOnChange": "CyclicOnChange"},
-        key="CyclicOnChange",
+        enum_mapping={"CyclicOnChange": "CyclicOnChange"},
+        enum_key="CyclicOnChange",
     )
     isArrayTypeTag: BoolField = BoolField(
         variable_name="isArrayTypeTag",
@@ -553,8 +557,8 @@ class OPCUATagConfig(NestedField):
     accessMode: EnumField = EnumField(
         variable_name="accessMode",
         description="Access mode of UA Connector to data node. Either Read, or Read & Write",
-        key=None,
-        mapping={"Read": "r", "Read & Write": "rw"},
+        enum_key=None,
+        enum_mapping={"Read": "r", "Read & Write": "rw"},
     )
     comments: StringField = StringField(
         variable_name="comments",
@@ -589,9 +593,9 @@ class OPCUADatapointConfig(NestedField):
     )
     authenticationMode: EnumField = EnumField(
         variable_name="authenticationMode",
-        key=None,
+        enum_key=None,
         description="Mode of authentication to OPC UA Server. Can be Anonymous or User ID & Password",
-        mapping={"Anonymous": 1, "User ID & Password": 2},
+        enum_mapping={"Anonymous": 1, "User ID & Password": 2},
     )
 
 
@@ -709,8 +713,8 @@ class DatabusTopicConfig(NestedField):
     access_rights: EnumField = EnumField(
         variable_name="access-rights",
         description="Access right of the user to the topic. Can be No Permission, Subscribe Only, Publish and Subscribe",
-        key=None,
-        mapping={
+        enum_key=None,
+        enum_mapping={
             "No Permission": "none",
             "Subscribe Only": "subscribe",
             "Publish and Subscribe": "both",
@@ -767,8 +771,8 @@ class DocumentationDatabusConfig(AbstractAppConfig):
     autosave_interval: EnumField = EnumField(
         variable_name="autosave-interval",
         description="Time intervals between data backups in case persistency is enabled. Can be 5 mins, 1 hour, 1 day.",
-        key=None,
-        mapping={"5 mins": "300", "1 hour": "3600", "1 day": "86400"},
+        enum_key=None,
+        enum_mapping={"5 mins": "300", "1 hour": "3600", "1 day": "86400"},
     )
     live_view_config: DatabusLiveViewConfig = DatabusLiveViewConfig(
         variable_name="live_view_config",

@@ -1,4 +1,12 @@
-from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
+from src.iem_model import (
+    AbstractAppConfig,
+    StringField,
+    NestedField,
+    ListField,
+    EnumField,
+)
+
+from typing import Dict, Optional
 
 
 class AuthenticationData(NestedField):
@@ -39,3 +47,15 @@ class UserData(AbstractAppConfig):
 
     def generate_prompt_string(self):
         return "Needs a username and a string"
+
+
+class IcreamChoice(EnumField):
+    variable_name: str = "ice_cream_choice"
+    description: str = "The choice of ice cream"
+    enum_mapping: Dict = {
+        "B": "Banana",
+        "V": "Vanilla",
+        "S": "Strawberry",
+        "C": "Chocolate",
+    }
+    enum_key: Optional[str] = None

@@ -1,7 +1,7 @@
 import pytest
 
 from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
-from .mock_data import UserData
+from .mock_data import UserData, IcreamChoice
 
 
 def test_load_from_export():
@@ -20,3 +20,9 @@ def test_load_from_export():
     assert dataObj2.name.value == "Carl"
     assert dataObj2.contacts.items[0].phone_number.value == "123456789"
     assert dataObj2.contacts.items[0].address.value == "Siemensstr. 1"
+
+
+def test_load_enum():
+    choice = IcreamChoice()
+    choice.fill_from_json("Banana")
+    assert choice.enum_key == "B"
