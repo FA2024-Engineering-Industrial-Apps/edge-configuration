@@ -106,14 +106,14 @@ class EnumField(Field, ABC):
             return {
                 "variable_name": self.variable_name,
                 "description": self.description,
-                "value": self.mapping[self.key],
+                "value": self.mapping[self.key] if self.key else None,
             }
         else:
             return {}
 
     def to_json(self) -> Dict:
         if self.visible:
-            return {"value": self.mapping[self.key]}
+            return {"value": self.mapping[self.key] if self.key else None}
         else:
             return {}
 
@@ -124,9 +124,13 @@ class ListField(Field):
 
     blueprint: Field
 
-    def create_item(self, number: int):
-        for i in range(number):
-            self.items.append(self.blueprint.model_copy(deep=True))
+    def __init__(self, /, **data: Any):
+        super().__init__(**data)
+        self.items.append(self.blueprint.model_copy(deep=True))
+
+    def create_item(self):
+        self.items.append(self.blueprint.model_copy(deep=True))
+
 
     def create_prefix(self, preprefix: str) -> str:
         if preprefix == "":
@@ -145,17 +149,8 @@ class ListField(Field):
             "type": "function",
             "function": {
                 "name": name,
-                "description": f"Create a new entries for {self.blueprint.variable_name} of type {self.type_name()}",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "number": {
-                            "type": "integer",
-                            "description": f"Amount of new {self.type_name()} to create",
-                        },
-                    },
-                    "required": [self.variable_name],
-                },
+                "description": f"Create a new entry for {self.blueprint.variable_name} of type {self.type_name()}",
+                "parameters": {},
             },
         }
         return [
@@ -403,13 +398,15 @@ class UrlField(StringField):
 
 class AbstractAppConfig(ABC, BaseModel):
 
-    @abstractmethod
     def generate_prompt_string(self):
-        pass
+        return str(self.describe())
 
-    @abstractmethod
     def generate_prompt_sidebar(self):
-        pass
+        json_description = self.describe()
+        result_string = ""
+        for field, value in json_description.items():
+            result_string += f"{field}: {value}\n"
+        return result_string
 
     # returns a list containing the FunctionDescriptionPairs of all Fields and Subfields of the AppConfig
     def generate_tool_functions(self) -> List[FunctionDescriptionPair]:
@@ -596,6 +593,9 @@ class DocumentationUAConnectorConfig(AbstractAppConfig):
         description="Password used to connect to Databus",
         value="edge",
     )
+    
+    def __init__(self, /, **data: Any):
+        super().__init__(**data)
 
 
 # definition of the UAConnector Config containing all data for the configuration of a UA Connector
@@ -621,37 +621,37 @@ class UAConnectorConfig(AbstractAppConfig):
     def __init__(self, /, **data: Any):
         super().__init__(**data)
 
-    def generate_prompt_string(self):
-        string = """
-        [
-            {{
-                name: {0},
-                description: {1},
-                value: {2},
-            }},
-            {{
-                name: {3},
-                description: {4},
-                value: {5},
-            }},
-            {{
-                name: {6},
-                description: {7},
-                value: {8},
-            }}
-        ]
-        """
-        return string.format(
-            self.nameField.variable_name,
-            self.nameField.description,
-            self.nameField.value,
-            self.urlField.variable_name,
-            self.urlField.description,
-            self.urlField.value,
-            self.portField.variable_name,
-            self.portField.description,
-            self.portField.value,
-        )
+    # def generate_prompt_string(self):
+    #     string = """
+    #     [
+    #         {{
+    #             name: {0},
+    #             description: {1},
+    #             value: {2},
+    #         }},
+    #         {{
+    #             name: {3},
+    #             description: {4},
+    #             value: {5},
+    #         }},
+    #         {{
+    #             name: {6},
+    #             description: {7},
+    #             value: {8},
+    #         }}
+    #     ]
+    #     """
+    #     return string.format(
+    #         self.nameField.variable_name,
+    #         self.nameField.description,
+    #         self.nameField.value,
+    #         self.urlField.variable_name,
+    #         self.urlField.description,
+    #         self.urlField.value,
+    #         self.portField.variable_name,
+    #         self.portField.description,
+    #         self.portField.value,
+    #     )
 
     def generate_prompt_sidebar(self):
         string = """
@@ -813,6 +813,7 @@ class App:
         )
 
     def generate_tool_functions(self) -> List[FunctionDescriptionPair]:
+        print("got here")
         submit_dict = {
             "type": "function",
             "function": {
@@ -890,6 +891,30 @@ class AppModel:
 
     def generate_tool_functions(self) -> List[FunctionDescriptionPair]:
         result_list = []
+        new_app_description = {
+            "type": "function",
+            "function": {
+                "name": "add_app",
+                "description": f"Create a new app which should be added to the current IEM instance.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "val": {
+                            "type": "string",
+                            "description": f"The name of the app, which should be added. Possible options are:"
+                                           f"OPC_UA_CONNECTOR, DATABUS.",
+                        },
+                    },
+                    "required": ["val"],
+                },
+            },
+        }
+        result_list.append(FunctionDescriptionPair(
+            name="add_app",
+            fct=self.add_app,
+            llm_description=new_app_description,
+        ))
+        print(f"self.apps length is {len(self.apps)}")
         for app in self.apps:
             result_list += app.generate_tool_functions()
         #print("TOOL FUNCTIONS: ")
@@ -902,3 +927,17 @@ class AppModel:
             result += app.generate_prompt_sidebar()
             result += "-----------------------------\n"
         return result
+
+    def add_app(self, val: str):
+        app_type = AppType[val]
+        if app_type == AppType.OPC_UA_CONNECTOR:
+            print("got here")
+            new_app = App(
+                name="OPC_UA_CONNECTOR",
+                description="A app which connects to a configured OPC UA Server and collects data from this.",
+                config=DocumentationUAConnectorConfig(),
+                id="456e041339e744caa9514a1c86536067"
+            )
+            print("got here too")
+            self.apps.append(new_app)
+            print(f"now app.length = {len(self.apps)}")

@@ -6,6 +6,7 @@ from iem_integration.devices import DetailedDevice
 
 class AppType(Enum):
     OPC_UA_CONNECTOR = "OPC_UA_CONNECTOR"
+    DATABUS = "DATABUS"
 
 
 class ConfigConverter:

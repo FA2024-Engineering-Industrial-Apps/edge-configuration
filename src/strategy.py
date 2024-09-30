@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from llm import retrieve_model
-from iem_model import App, UAConnectorConfig, AbstractAppConfig, AppModel
+from iem_model import App, UAConnectorConfig, AbstractAppConfig, AppModel, DocumentationUAConnectorConfig
 from data_extraction import DataExtractor
 from llm_service import GPT4o, GPT4Turbo
 from nl_service import NLService
@@ -18,6 +18,7 @@ class Strategy(ABC):
 
 
 class EdgeConfigStrategy(Strategy):
+    model = None
     system_prompt = """
     You are an expert for configuring Siemens IEM.
 There are many different kinds of customers, some more experienced, but also beginners, which do not how to
@@ -46,7 +47,7 @@ If there is nonsensical information for setting one of the values, skip this val
     opc_ua_connector = App(
         name="OPC_UA_CONNECTOR",
         description="A app which connects to a configured OPC UA Server and collects data from this.",
-        config=UAConnectorConfig(),
+        config=DocumentationUAConnectorConfig(),
         id="456e041339e744caa9514a1c86536067"
     )
 
@@ -66,7 +67,7 @@ If there is nonsensical information for setting one of the values, skip this val
             self.create_app_overview()
         )
         self.model: AppModel = AppModel()
-        self.model.apps = [self.opc_ua_connector]
+        self.model.apps = []
         self.nl_service = NLService(self.model,
                                     GPT4o(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.model)
@@ -80,5 +81,5 @@ If there is nonsensical information for setting one of the values, skip this val
             {"role": "user", "content": prompt},
             {"role": "assistant", "content": nl_response},
         ]
-        self.data_extractor.update_data(history + [{"role": "user", "content": prompt}])
+        self.data_extractor.update_data([{"role": "user", "content": prompt}])
         return nl_response, self.model
