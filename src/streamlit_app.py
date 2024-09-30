@@ -35,7 +35,7 @@ if prompt := st.chat_input("Write something"):
 
     with st.chat_message("assistant"):
         st.markdown(response_message)
-        
+
     st.session_state.messages.append({"role": "assistant", "content": response_message})
 
     # TODO: Add an potential extra system promt to st.session_state.messages to tell the LLM
@@ -44,6 +44,7 @@ if prompt := st.chat_input("Write something"):
     with st.sidebar:
         st.subheader("Configuration Parameters")
         st.markdown(current_model.generate_prompt_sidebar())
+
 
 
 
