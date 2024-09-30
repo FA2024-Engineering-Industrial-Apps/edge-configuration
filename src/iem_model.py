@@ -757,12 +757,12 @@ class OPCUAServerSource(NestedField):
         description="Username used to connect to data source",
         value=None
     )
-    password: StringField(
+    password: StringField = StringField(
         variable_name="password",
         description="Password used to connect to data source",
         value=None
     )
-    topic: StringField(
+    topic: StringField = StringField(
         variable_name="topic",
         description="Topic through which the data relevant to the server is transferred",
         value=None
