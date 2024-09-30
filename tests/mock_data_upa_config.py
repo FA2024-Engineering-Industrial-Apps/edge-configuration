@@ -73,8 +73,8 @@ class OPCUATagConfig(NestedField):
     acquisitionCycle: EnumField = EnumField(
         variable_name="acquisitionCycle",
         description="Time between consequent value checks in milliseconds or second. Available times: 10 milliseconds, 50 milliseconds, 100 milliseconds, 250 milliseconds, 500 milliseconds, 1 second, 2 second, 5 second, 10 second",
-        key=None,
-        mapping={
+        enum_key=None,
+        enum_mapping={
             "10 milliseconds": 10,
             "50 milliseconds": 50,
             "100 milliseconds": 100,
@@ -89,8 +89,8 @@ class OPCUATagConfig(NestedField):
     acquisitionMode: EnumField = EnumField(
         variable_name="acquisitionMode",
         description="Aquisition mode, describing when UAConnector will pull value from data node. Possible options: CyclicOnChange",
-        mapping={"CyclicOnChange": "CyclicOnChange"},
-        key="CyclicOnChange",
+        enum_mapping={"CyclicOnChange": "CyclicOnChange"},
+        enum_key="CyclicOnChange",
     )
     isArrayTypeTag: BoolField = BoolField(
         variable_name="isArrayTypeTag",
@@ -100,8 +100,8 @@ class OPCUATagConfig(NestedField):
     accessMode: EnumField = EnumField(
         variable_name="accessMode",
         description="Access mode of UA Connector to data node. Either Read, or Read & Write",
-        key=None,
-        mapping={"Read": "r", "Read & Write": "rw"},
+        enum_key=None,
+        enum_mapping={"Read": "r", "Read & Write": "rw"},
     )
     comments: StringField = StringField(
         variable_name="comments",
@@ -136,9 +136,9 @@ class OPCUADatapointConfig(NestedField):
     )
     authenticationMode: EnumField = EnumField(
         variable_name="authenticationMode",
-        key=None,
+        enum_key=None,
         description="Mode of authentication to OPC UA Server. Can be Anonymous or User ID & Password",
-        mapping={"Anonymous": 1, "User ID & Password": 2},
+        enum_mapping={"Anonymous": 1, "User ID & Password": 2},
     )
 
 

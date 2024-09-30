@@ -59,3 +59,29 @@ class IcreamChoice(EnumField):
         "C": "Chocolate",
     }
     enum_key: Optional[str] = None
+
+
+class Client(NestedField):
+    name: StringField = StringField(
+        variable_name="name", description="name", value=None
+    )
+    technology: StringField = StringField(
+        variable_name="technology", description="technology", value=None
+    )
+
+
+class Server(NestedField):
+    name: StringField = StringField(
+        variable_name="name", description="name", value=None
+    )
+    technology: StringField = StringField(
+        variable_name="technology", description="technology", value=None
+    )
+
+
+class AmbiguousData(AbstractAppConfig):
+    client: Client = Client(variable_name="client", description="The client")
+    server: Server = Server(variable_name="server", description="The server")
+
+    def generate_prompt_string(self):
+        return str(self.to_json())

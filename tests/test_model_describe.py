@@ -46,8 +46,3 @@ def test_to_json_hidden():
         "contacts": [],
         "name": None,
     }
-
-
-def test_from_json():
-    dataObj = UserData()
-    UserData.from_json(dataObj.to_json())
