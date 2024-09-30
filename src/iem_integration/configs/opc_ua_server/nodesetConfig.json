@@ -1,0 +1,97 @@
+{
+  "sources": [
+    {
+      "sourceId": "c5b1aa71-049e-449d-a8e3-c1b7e47d9a28",
+      "edgeAppName": "OPC UA Connector",
+      "userDefinedName": "OPC UA Connector",
+      "connections": [
+        {
+          "dataPoints": [
+            {
+              "dataPointDefinitions": [
+                {
+                  "accessMode": "rw",
+                  "acquisitionCycleInMs": 1000,
+                  "acquisitionMode": "CyclicOnChange",
+                  "dataType": "Real",
+                  "id": "101",
+                  "name": "Root.Objects.PLC.default.GDB.signals.energySignals.energyConsumptionFillingBottle"
+                },
+                {
+                  "accessMode": "rw",
+                  "acquisitionCycleInMs": 1000,
+                  "acquisitionMode": "CyclicOnChange",
+                  "dataType": "Real",
+                  "id": "102",
+                  "name": "Root.Objects.PLC.default.GDB.signals.energySignals.energyConsumptionHeatingTank"
+                },
+                {
+                  "accessMode": "rw",
+                  "acquisitionCycleInMs": 1000,
+                  "acquisitionMode": "CyclicOnChange",
+                  "dataType": "Real",
+                  "id": "103",
+                  "name": "Root.Objects.PLC.default.GDB.signals.energySignals.waterConsumptionFillingTank"
+                },
+                {
+                  "accessMode": "rw",
+                  "acquisitionCycleInMs": 1000,
+                  "acquisitionMode": "CyclicOnChange",
+                  "dataType": "Real",
+                  "id": "104",
+                  "name": "Root.Objects.PLC.default.GDB.signals.energySignals.energyConsumptionFillingTank"
+                },
+                {
+                  "accessMode": "rw",
+                  "acquisitionCycleInMs": 1000,
+                  "acquisitionMode": "CyclicOnChange",
+                  "dataType": "Real",
+                  "id": "105",
+                  "name": "Root.Objects.PLC.default.GDB.signals.tankSignals.actTemperature"
+                },
+                {
+                  "accessMode": "rw",
+                  "acquisitionCycleInMs": 1000,
+                  "acquisitionMode": "CyclicOnChange",
+                  "dataType": "Real",
+                  "id": "106",
+                  "name": "Root.Objects.PLC.default.GDB.signals.tankSignals.actLevel"
+                },
+                {
+                  "accessMode": "rw",
+                  "acquisitionCycleInMs": 1000,
+                  "acquisitionMode": "CyclicOnChange",
+                  "dataType": "Int",
+                  "id": "107",
+                  "name": "Root.Objects.PLC.default.GDB.process.numberFaulty"
+                },
+                {
+                  "accessMode": "rw",
+                  "acquisitionCycleInMs": 1000,
+                  "acquisitionMode": "CyclicOnChange",
+                  "dataType": "Int",
+                  "id": "108",
+                  "name": "Root.Objects.PLC.default.GDB.process.numberProduced"
+                },
+                {
+                  "accessMode": "rw",
+                  "acquisitionCycleInMs": 1000,
+                  "acquisitionMode": "CyclicOnChange",
+                  "dataType": "Int",
+                  "id": "109",
+                  "name": "Root.Objects.PLC.default.GDB.operate.machineState"
+                }
+              ],
+              "name": "default",
+              "pubTopic": "ie/d/j/simatic/v1/opcuac1/dp/w/PLC1",
+              "publishType": "bulk",
+              "topic": "ie/d/j/simatic/v1/opcuac1/dp/r/PLC1/default"
+            }
+          ],
+          "name": "PLC1",
+          "type": "OPCUA"
+        }
+      ]
+    }
+  ]
+}

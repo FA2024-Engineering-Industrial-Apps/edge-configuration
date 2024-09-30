@@ -1,0 +1,32 @@
+{
+  "sourceProviders": [
+    {
+      "sourceId": "c5b1aa71-049e-449d-a8e3-c1b7e47d9a28",
+      "name": "OPC UA Connector",
+      "transport": [
+        {
+          "transportId": "49aa103f-b7a3-4501-9832-7d026b00421a",
+          "transportTypeId": "1"
+        }
+      ]
+    }
+  ],
+  "transportConfigurations": [
+    {
+      "transportType": "IE Databus",
+      "transportTypeId": "1",
+      "info": [
+        {
+          "name": "OPC UA Connector",
+          "clientId": "opcua-zm058ae6e5",
+          "userName": "edge",
+          "password": "aa2MEw==",
+          "topic": "ie/m/j/simatic/v1/opcuac1/dp",
+          "port": "1883",
+          "hostName": "ie-databus",
+          "transportId": "49aa103f-b7a3-4501-9832-7d026b00421a"
+        }
+      ]
+    }
+  ]
+}
