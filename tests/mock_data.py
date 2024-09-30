@@ -39,3 +39,6 @@ class UserData(AbstractAppConfig):
 
     def generate_prompt_string(self):
         return "Needs a username and a string"
+    
+    def generate_prompt_sidebar(self):
+        pass
