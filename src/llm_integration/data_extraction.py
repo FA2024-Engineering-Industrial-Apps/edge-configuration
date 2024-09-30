@@ -1,9 +1,7 @@
 from typing import List, Dict
-from openai import OpenAI
-from dotenv import load_dotenv
-from iem_model import AbstractAppConfig, AppModel
+from model.app_model import AppModel
 import json
-from llm_service import LLM, GPT4o
+from llm_integration.llm_service import LLM, GPT4o
 from error_handling import ValidationException
 
 

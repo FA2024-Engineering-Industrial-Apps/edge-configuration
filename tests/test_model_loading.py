@@ -1,6 +1,6 @@
 import pytest
 
-from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
+from model.iem_model import AbstractAppConfig, StringField, NestedField, ListField
 from .mock_data import UserData, IcreamChoice
 
 

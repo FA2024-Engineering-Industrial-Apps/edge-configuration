@@ -1,19 +1,9 @@
-from model.iem_model import (
-    AbstractAppConfig,
-    StringField,
-    NestedField,
-    ListField,
-    IntField,
-    UrlField,
-    PortField,
-    EnumField,
-    IPv6Field,
-    BoolField,
-)
+from __future__ import annotations
 
-from typing import Dict, Any
+from model.iem_base_model import *
 
 
+# TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
 class OPCUATagAddressField(NestedField):
     namespace: IntField = IntField(
         variable_name="ns",
@@ -245,3 +235,116 @@ class UAConnectorConfig(AbstractAppConfig):
             self.urlField.value,
             self.portField.value,
         )
+
+
+class DatabusTopicConfig(NestedField):
+    topic_name: StringField = StringField(
+        variable_name="topic-name",
+        description="Name of the MQQT topic a user can utilize for communication",
+        value=None,
+    )
+    access_rights: EnumField = EnumField(
+        variable_name="access-rights",
+        description="Access right of the user to the topic. Can be No Permission, Subscribe Only, Publish and Subscribe",
+        enum_key=None,
+        enum_mapping={
+            "No Permission": "none",
+            "Subscribe Only": "subscribe",
+            "Publish and Subscribe": "both",
+        },
+    )
+
+
+class DatabusUserConfig(NestedField):
+    username: StringField = StringField(
+        variable_name="username", description="Name of the Databus user.", value="edge"
+    )
+    password: StringField = StringField(
+        variable_name="password",
+        description="Password of the Databus user.",
+        value=None,
+    )
+    topics: ListField = ListField(
+        variable_name="topics",
+        description="List of MQTT topics that user can utilize for communication",
+        blueprint=DatabusTopicConfig(
+            variable_name="topic",
+            description="Description of a single topic that user can use for communication",
+        ),
+    )
+
+
+class DatabusLiveViewConfig(NestedField):
+    # TODO: Maybe more fields are necessary??
+    topics: ListField = ListField(
+        variable_name="topics",
+        description="List of topic names that are monitored live.",
+        blueprint=StringField(
+            variable_name="topic-name",
+            description="Name of the topic that is monitored live",
+            value=None,
+        ),
+    )
+
+
+class DocumentationDatabusConfig(AbstractAppConfig):
+    userConfig: ListField = ListField(
+        variable_name="user-config",
+        description="List of users that are allowed to publish and subscribe to topics.",
+        blueprint=DatabusUserConfig(
+            variable_name="user", description="Databus user config."
+        ),
+    )
+    # A separate persistence config may be needed
+    persistence: BoolField = BoolField(
+        variable_name="is-enabled",
+        description="Bool flag showing whether data persistency is enabled for databus (passing messages are backuped).",
+        value=None,
+    )
+    autosave_interval: EnumField = EnumField(
+        variable_name="autosave-interval",
+        description="Time intervals between data backups in case persistency is enabled. Can be 5 mins, 1 hour, 1 day.",
+        enum_key=None,
+        enum_mapping={"5 mins": "300", "1 hour": "3600", "1 day": "86400"},
+    )
+    live_view_config: DatabusLiveViewConfig = DatabusLiveViewConfig(
+        variable_name="live_view_config",
+        description="Config for live monitoring of communication through MQTT topics.",
+    )
+
+
+class OPCUAServerSource(NestedField):
+    name: StringField = StringField(
+        variable_name="name", description="Name of the data source.", value=None
+    )
+    userName: StringField = StringField(
+        variable_name="userName",
+        description="Username used to connect to data source",
+        value=None,
+    )
+    password: StringField = StringField(
+        variable_name="password",
+        description="Password used to connect to data source",
+        value=None,
+    )
+    topic: StringField = StringField(
+        variable_name="topic",
+        description="Topic through which the data relevant to the server is transferred",
+        value=None,
+    )
+
+
+class OPCUAServerConfig(AbstractAppConfig):
+    sourceProviders: ListField = ListField(
+        variable_name="sourceProviders",
+        description="Data sources that send data fields to OPCUA Server",
+        blueprint=OPCUAServerSource(
+            variable_name="source",
+            description="Single data source that sends data fields to server",
+        ),
+    )
+
+
+# For testing TODO
+class DatabusConfig(AbstractAppConfig):
+    pass

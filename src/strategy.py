@@ -1,13 +1,12 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List
 
 from iem_integration.devices import get_device_list
-from llm import retrieve_model
-from iem_model import App, UAConnectorConfig, AbstractAppConfig, AppModel
-from data_extraction import DataExtractor
-from llm_service import GPT4o
-from nl_service import NLService
+from model.iem_model import UAConnectorConfig
+from model.app_model import AppModel, App
+from llm_integration.data_extraction import DataExtractor
+from llm_integration.llm_service import GPT4o
+from llm_integration.nl_service import NLService
 from typing import Tuple
 
 
@@ -151,7 +150,10 @@ Currently, IEnsight offers the following features:
 
     def __init__(self):
         adapted_system_prompt = self.system_prompt.format(
-            self.create_app_overview(), "\n".join([f"{device.name} ({device.status})" for device in get_device_list()])
+            self.create_app_overview(),
+            "\n".join(
+                [f"{device.name} ({device.status})" for device in get_device_list()]
+            ),
         )
 
         self.model: AppModel = AppModel()
