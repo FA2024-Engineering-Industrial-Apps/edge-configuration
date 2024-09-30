@@ -1,8 +1,8 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List
 
-from iem_model import App, UAConnectorConfig, AbstractAppConfig, AppModel
+from iem_model import UAConnectorConfig
+from app_model import AppModel, App
 from data_extraction import DataExtractor
 from llm_service import GPT4o
 from nl_service import NLService
