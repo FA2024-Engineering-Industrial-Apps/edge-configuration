@@ -1,5 +1,8 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Callable, Optional
+
+# from builtins import classmethod
+from typing import Any, Dict, List, Callable, Optional, Type
 from pydantic.dataclasses import dataclass
 from pydantic import BaseModel, ConfigDict
 from error_handling import ValidationException
@@ -51,14 +54,18 @@ class Field(ABC, BaseModel):
     def to_json(self) -> Dict:
         pass
 
+    @abstractmethod
+    def fill_from_json(self, json: Any):
+        pass
+
 
 # For simplicity I assume that selector input is always a string
 class EnumField(Field, ABC):
-    mapping: Dict[str, Any]
-    key: Any
+    enum_mapping: Dict[str, Any]
+    enum_key: Any
 
     def validate_value(self, key: str) -> bool:
-        return key in self.mapping.keys()
+        return key in self.enum_mapping.keys()
 
     def set_value(self, key: str):
         if self.validate_value(key):
@@ -69,9 +76,9 @@ class EnumField(Field, ABC):
 
     def setter_name(self, prefix) -> str:
         if not prefix:
-            return f"{self.variable_name}-set_value"
+            return f"{self.variable_name.replace(' ', '_')}-set_value"
         else:
-            return f"{prefix}-{self.variable_name}-set_value"
+            return f"{prefix}-{self.variable_name.replace(' ', '_')}-set_value"
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         if not self.setter_active:
@@ -80,7 +87,7 @@ class EnumField(Field, ABC):
             "type": "function",
             "function": {
                 "name": self.setter_name(prefix),
-                "description": f"Select value for selector {self.variable_name}. Available values are {' '.join(self.mapping.keys())}",
+                "description": f"Select value for selector {self.variable_name}. Available values are {' '.join(self.enum_mapping.keys())}",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -106,16 +113,24 @@ class EnumField(Field, ABC):
             return {
                 "variable_name": self.variable_name,
                 "description": self.description,
-                "value": self.mapping[self.key],
+                "value": self.enum_mapping[self.enum_key],
             }
         else:
             return {}
 
     def to_json(self) -> Dict:
         if self.visible:
-            return {"value": self.mapping[self.key]}
+            return {"value": self.enum_mapping[self.enum_key]}
         else:
             return {}
+
+    # Idk how this enum works
+    def fill_from_json(self, json: Any):
+        for k, v in self.enum_mapping.items():
+            if v == json:
+                self.enum_key = k
+                return
+        raise ValueError(f"No matching key found for {json}")
 
 
 class ListField(Field):
@@ -164,9 +179,9 @@ class ListField(Field):
 
     def create_item_name(self, prefix: str) -> str:
         if prefix == "":
-            return f"{self.variable_name}-create_item"
+            return f"{self.variable_name.replace(' ', '_')}-create_item"
         else:
-            return f"{prefix}-{self.variable_name}-create_item"
+            return f"{prefix}-{self.variable_name.replace(' ', '_')}-create_item"
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         all_pairs = []
@@ -204,6 +219,13 @@ class ListField(Field):
         else:
             return {}
 
+    def fill_from_json(self, json: Any):
+        if isinstance(json, list):
+            for i in json:
+                new_item = self.blueprint.model_copy(deep=True)
+                new_item.fill_from_json(i)
+                self.items.append(new_item)
+
 
 # general definition of a Field containing other Fields
 class NestedField(Field, ABC):
@@ -215,12 +237,12 @@ class NestedField(Field, ABC):
 
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                        getattr(field_value, "generate_tool_functions")
+                    getattr(field_value, "generate_tool_functions")
                 ):
                     if prefix:
-                        new_prefix = prefix + "-" + self.variable_name
+                        new_prefix = prefix + "-" + self.variable_name.replace(" ", "_")
                     else:
-                        new_prefix = self.variable_name
+                        new_prefix = self.variable_name.replace(" ", "_")
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         new_prefix
                     )
@@ -232,7 +254,7 @@ class NestedField(Field, ABC):
 
             if isinstance(field_value, Field):
                 if hasattr(field_value, "deactivate_setter") and callable(
-                        getattr(field_value, "deactivate_setter")
+                    getattr(field_value, "deactivate_setter")
                 ):
                     getattr(field_value, "deactivate_setter")()
 
@@ -241,7 +263,7 @@ class NestedField(Field, ABC):
 
             if isinstance(field_value, Field):
                 if hasattr(field_value, "activate_sette") and callable(
-                        getattr(field_value, "activate_sette")
+                    getattr(field_value, "activate_sette")
                 ):
                     getattr(field_value, "activate_setter")()
 
@@ -271,6 +293,14 @@ class NestedField(Field, ABC):
                     base[field_name] = field_value.to_json()["value"]
         return {"value": base}
 
+    def fill_from_json(self, json: Any):
+        if isinstance(json, dict):
+            for k, v in self.__dict__.items():
+                if k in json:
+                    v.fill_from_json(json[k])
+        else:
+            raise ValueError(f"NestedField could not be created from {json}")
+
 
 # general definition of a field containing a single value
 class ValueField(Field, ABC):
@@ -288,9 +318,9 @@ class ValueField(Field, ABC):
     # returns a senseful name of the set_value function used for the llm description
     def setter_name(self, prefix) -> str:
         if not prefix:
-            return f"{self.variable_name}-set_value"
+            return f"{self.variable_name.replace(' ', '_')}-set_value"
         else:
-            return f"{prefix}-{self.variable_name}-set_value"
+            return f"{prefix}-{self.variable_name.replace(' ', '_')}-set_value"
 
     @abstractmethod
     def data_type(self) -> str:
@@ -340,6 +370,9 @@ class ValueField(Field, ABC):
             return {"value": self.value}
         else:
             return {}
+
+    def fill_from_json(self, json: Any):
+        self.set_value(json)
 
 
 class StringField(ValueField):
@@ -408,7 +441,7 @@ class AbstractAppConfig(ABC, BaseModel):
         pass
 
     @abstractmethod
-    def generate_prompt_sidebar(self):
+    def generate_prompt_sidebar(self) -> str:
         pass
 
     # returns a list containing the FunctionDescriptionPairs of all Fields and Subfields of the AppConfig
@@ -417,7 +450,7 @@ class AbstractAppConfig(ABC, BaseModel):
         for field_name, field_value in self.__dict__.items():
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                        getattr(field_value, "generate_tool_functions")
+                    getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         prefix=""
@@ -440,6 +473,11 @@ class AbstractAppConfig(ABC, BaseModel):
                 if field_value.visible:
                     base[field_name] = field_value.to_json()["value"]
         return base
+
+    def fill_from_json(self, json: Dict):
+        for k, v in self.__dict__.items():
+            if k in json:
+                v.fill_from_json(json[k])
 
 
 # TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
@@ -502,8 +540,8 @@ class OPCUATagConfig(NestedField):
     acquisitionCycle: EnumField = EnumField(
         variable_name="acquisitionCycle",
         description="Time between consequent value checks in milliseconds or second. Available times: 10 milliseconds, 50 milliseconds, 100 milliseconds, 250 milliseconds, 500 milliseconds, 1 second, 2 second, 5 second, 10 second",
-        key=None,
-        mapping={
+        enum_key=None,
+        enum_mapping={
             "10 milliseconds": 10,
             "50 milliseconds": 50,
             "100 milliseconds": 100,
@@ -518,8 +556,8 @@ class OPCUATagConfig(NestedField):
     acquisitionMode: EnumField = EnumField(
         variable_name="acquisitionMode",
         description="Aquisition mode, describing when UAConnector will pull value from data node. Possible options: CyclicOnChange",
-        mapping={"CyclicOnChange": "CyclicOnChange"},
-        key="CyclicOnChange",
+        enum_mapping={"CyclicOnChange": "CyclicOnChange"},
+        enum_key="CyclicOnChange",
     )
     isArrayTypeTag: BoolField = BoolField(
         variable_name="isArrayTypeTag",
@@ -529,8 +567,8 @@ class OPCUATagConfig(NestedField):
     accessMode: EnumField = EnumField(
         variable_name="accessMode",
         description="Access mode of UA Connector to data node. Either Read, or Read & Write",
-        key=None,
-        mapping={"Read": "r", "Read & Write": "rw"},
+        enum_key=None,
+        enum_mapping={"Read": "r", "Read & Write": "rw"},
     )
     comments: StringField = StringField(
         variable_name="comments",
@@ -565,9 +603,9 @@ class OPCUADatapointConfig(NestedField):
     )
     authenticationMode: EnumField = EnumField(
         variable_name="authenticationMode",
-        key=None,
+        enum_key=None,
         description="Mode of authentication to OPC UA Server. Can be Anonymous or User ID & Password",
-        mapping={"Anonymous": 1, "User ID & Password": 2},
+        enum_mapping={"Anonymous": 1, "User ID & Password": 2},
     )
 
 
@@ -674,39 +712,44 @@ class UAConnectorConfig(AbstractAppConfig):
             self.urlField.value,
             self.portField.value,
         )
-        
+
+
 class DatabusTopicConfig(NestedField):
     topic_name: StringField = StringField(
         variable_name="topic-name",
         description="Name of the MQQT topic a user can utilize for communication",
-        value=None
+        value=None,
     )
     access_rights: EnumField = EnumField(
         variable_name="access-rights",
         description="Access right of the user to the topic. Can be No Permission, Subscribe Only, Publish and Subscribe",
-        key=None,
-        mapping={"No Permission": "none", "Subscribe Only": "subscribe", "Publish and Subscribe": "both"}
+        enum_key=None,
+        enum_mapping={
+            "No Permission": "none",
+            "Subscribe Only": "subscribe",
+            "Publish and Subscribe": "both",
+        },
     )
-        
+
+
 class DatabusUserConfig(NestedField):
     username: StringField = StringField(
-        variable_name="username",
-        description="Name of the Databus user.",
-        value="edge"
+        variable_name="username", description="Name of the Databus user.", value="edge"
     )
     password: StringField = StringField(
         variable_name="password",
         description="Password of the Databus user.",
-        value=None
+        value=None,
     )
     topics: ListField = ListField(
         variable_name="topics",
         description="List of MQTT topics that user can utilize for communication",
         blueprint=DatabusTopicConfig(
             variable_name="topic",
-            description="Description of a single topic that user can use for communication"
-        )
+            description="Description of a single topic that user can use for communication",
+        ),
     )
+
 
 class DatabusLiveViewConfig(NestedField):
     # TODO: Maybe more fields are necessary??
@@ -716,36 +759,69 @@ class DatabusLiveViewConfig(NestedField):
         blueprint=StringField(
             variable_name="topic-name",
             description="Name of the topic that is monitored live",
-            value=None
-        )
+            value=None,
+        ),
     )
+
 
 class DocumentationDatabusConfig(AbstractAppConfig):
     userConfig: ListField = ListField(
         variable_name="user-config",
         description="List of users that are allowed to publish and subscribe to topics.",
         blueprint=DatabusUserConfig(
-            variable_name="user",
-            description="Databus user config."
-        )
+            variable_name="user", description="Databus user config."
+        ),
     )
     # A separate persistence config may be needed
     persistence: BoolField = BoolField(
         variable_name="is-enabled",
         description="Bool flag showing whether data persistency is enabled for databus (passing messages are backuped).",
-        value=None
+        value=None,
     )
     autosave_interval: EnumField = EnumField(
         variable_name="autosave-interval",
         description="Time intervals between data backups in case persistency is enabled. Can be 5 mins, 1 hour, 1 day.",
-        key=None,
-        mapping={"5 mins": "300", "1 hour": "3600", "1 day": "86400"}
+        enum_key=None,
+        enum_mapping={"5 mins": "300", "1 hour": "3600", "1 day": "86400"},
     )
     live_view_config: DatabusLiveViewConfig = DatabusLiveViewConfig(
         variable_name="live_view_config",
-        description="Config for live monitoring of communication through MQTT topics."
+        description="Config for live monitoring of communication through MQTT topics.",
     )
-    
+
+
+class OPCUAServerSource(NestedField):
+    name: StringField = StringField(
+        variable_name="name", description="Name of the data source.", value=None
+    )
+    userName: StringField = StringField(
+        variable_name="userName",
+        description="Username used to connect to data source",
+        value=None,
+    )
+    password: StringField = StringField(
+        variable_name="password",
+        description="Password used to connect to data source",
+        value=None,
+    )
+    topic: StringField = StringField(
+        variable_name="topic",
+        description="Topic through which the data relevant to the server is transferred",
+        value=None,
+    )
+
+
+class OPCUAServerConfig(AbstractAppConfig):
+    sourceProviders: ListField = ListField(
+        variable_name="sourceProviders",
+        description="Data sources that send data fields to OPCUA Server",
+        blueprint=OPCUAServerSource(
+            variable_name="source",
+            description="Single data source that sends data fields to server",
+        ),
+    )
+
+
 # For testing TODO
 class DatabusConfig(AbstractAppConfig):
     pass
@@ -756,7 +832,7 @@ class App:
     application_name: str
     app_id: str
     application_description: str
-    installed_device_name: str = None
+    installed_device_name: Optional[str] = None
     config: AbstractAppConfig
 
     def __init__(self, name: str, id: str, description: str, config: AbstractAppConfig):
@@ -793,7 +869,7 @@ class App:
         submit_fct = FunctionDescriptionPair(
             name=self.application_name + "_submit_to_iem",
             fct=self.submit_to_iem,
-            llm_description=submit_dict
+            llm_description=submit_dict,
         )
 
         set_device_name_fct = {
@@ -810,17 +886,20 @@ class App:
                         },
                     },
                     "required": ["installed_device_name"],
-                }
+                },
             },
         }
 
-        set_device_name_fct = FunctionDescriptionPair(
+        set_device_name_fct_data = FunctionDescriptionPair(
             name=self.application_name + "-set_device_name",
             fct=self.set_device_name,
-            llm_description=set_device_name_fct
+            llm_description=set_device_name_fct,
         )
 
-        return [submit_fct, set_device_name_fct] + self.config.generate_tool_functions()
+        return [
+            submit_fct,
+            set_device_name_fct_data,
+        ] + self.config.generate_tool_functions()
 
     def generate_prompt_sidebar(self) -> str:
         result = f"""
@@ -833,14 +912,16 @@ class App:
     def submit_to_iem(self):
         converter = ConfigConverter()
         device_details = get_device_details(self.installed_device_name)
-        prepared_config = converter.convert_to_iem_json(self.config.to_json(), device_details,
-                                                        AppType[self.application_name])
-        #print("DONE")
-        #print(device_details.id)
-        #print(OPC_UA_CONNECTOR_APP_ID)
-        #print(prepared_config)
-        install_app_on_edge_device(device_details.id, OPC_UA_CONNECTOR_APP_ID, [prepared_config])
-
+        prepared_config = converter.convert_to_iem_json(
+            self.config.to_json(), device_details, AppType[self.application_name]
+        )
+        # print("DONE")
+        # print(device_details.id)
+        # print(OPC_UA_CONNECTOR_APP_ID)
+        # print(prepared_config)
+        install_app_on_edge_device(
+            device_details.id, OPC_UA_CONNECTOR_APP_ID, [prepared_config]
+        )
 
     def set_device_name(self, val):
         self.installed_device_name = val
@@ -860,8 +941,8 @@ class AppModel:
         result_list = []
         for app in self.apps:
             result_list += app.generate_tool_functions()
-        #print("TOOL FUNCTIONS: ")
-        #print(result_list)
+        # print("TOOL FUNCTIONS: ")
+        # print(result_list)
         return result_list
 
     def generate_prompt_sidebar(self) -> str:

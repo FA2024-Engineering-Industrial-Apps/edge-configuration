@@ -1,4 +1,12 @@
-from src.iem_model import AbstractAppConfig, StringField, NestedField, ListField
+from src.iem_model import (
+    AbstractAppConfig,
+    StringField,
+    NestedField,
+    ListField,
+    EnumField,
+)
+
+from typing import Dict, Optional
 
 
 class AuthenticationData(NestedField):
@@ -39,3 +47,47 @@ class UserData(AbstractAppConfig):
 
     def generate_prompt_string(self):
         return "Needs a username and a string"
+
+    def generate_prompt_sidebar(self) -> str:
+        return str(self.to_json())
+
+
+class IcreamChoice(EnumField):
+    variable_name: str = "ice_cream_choice"
+    description: str = "The choice of ice cream"
+    enum_mapping: Dict = {
+        "B": "Banana",
+        "V": "Vanilla",
+        "S": "Strawberry",
+        "C": "Chocolate",
+    }
+    enum_key: Optional[str] = None
+
+
+class Client(NestedField):
+    name: StringField = StringField(
+        variable_name="name", description="name", value=None
+    )
+    technology: StringField = StringField(
+        variable_name="technology", description="technology", value=None
+    )
+
+
+class Server(NestedField):
+    name: StringField = StringField(
+        variable_name="name", description="name", value=None
+    )
+    technology: StringField = StringField(
+        variable_name="technology", description="technology", value=None
+    )
+
+
+class AmbiguousData(AbstractAppConfig):
+    client: Client = Client(variable_name="client", description="The client")
+    server: Server = Server(variable_name="server", description="The server")
+
+    def generate_prompt_string(self):
+        return str(self.describe())
+
+    def generate_prompt_sidebar(self):
+        return str(self.to_json())
