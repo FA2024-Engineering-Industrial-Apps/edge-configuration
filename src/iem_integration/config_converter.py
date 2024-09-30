@@ -47,11 +47,12 @@ class ConfigConverter:
         if app_type == AppType.OPC_UA_CONNECTOR:
             return self._transform_config_for_ua_connector(config, device)
 
-# cfg = UAConnectorConfig()
+# cfg = DocumentationUAConnectorConfig()
 # cfg.nameField.value = "Franz"
 # cfg.portField.value = 42080
 # cfg.urlField.value = "http://localhost"
 #
-# conv = ConfigConverter()
-# res = conv.convert_to_iem_json(cfg, AppType.OPC_UA_CONNECTOR)
-# print(res)
+#conv = ConfigConverter()
+#res = conv.convert_to_iem_json(cfg, AppType.OPC_UA_CONNECTOR)
+#print(res)
+# print(cfg.to_json())

@@ -384,7 +384,7 @@ class BoolField(ValueField):
     value: Optional[bool]
 
     def data_type(self) -> str:
-        return "bool"
+        return "boolean"
 
 
 class IPField(StringField):
