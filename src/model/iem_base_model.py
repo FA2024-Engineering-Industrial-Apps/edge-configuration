@@ -109,14 +109,14 @@ class EnumField(Field, ABC):
             return {
                 "variable_name": self.variable_name,
                 "description": self.description,
-                "value": self.enum_mapping[self.enum_key],
+                "value": self.enum_mapping[self.enum_key] if self.enum_key else None,
             }
         else:
             return {}
 
     def to_json(self) -> Dict:
         if self.visible:
-            return {"value": self.enum_mapping[self.enum_key]}
+            return {"value": self.enum_mapping[self.enum_key] if self.enum_key else None}
         else:
             return {}
 
@@ -135,9 +135,13 @@ class ListField(Field):
 
     blueprint: Field
 
-    def create_item(self, number: int):
-        for i in range(number):
-            self.items.append(self.blueprint.model_copy(deep=True))
+    def __init__(self, /, **data: Any):
+        super().__init__(**data)
+        self.items.append(self.blueprint.model_copy(deep=True))
+
+    def create_item(self):
+        self.items.append(self.blueprint.model_copy(deep=True))
+
 
     def create_prefix(self, preprefix: str) -> str:
         if preprefix == "":
@@ -156,17 +160,8 @@ class ListField(Field):
             "type": "function",
             "function": {
                 "name": name,
-                "description": f"Create a new entries for {self.blueprint.variable_name} of type {self.type_name()}",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "number": {
-                            "type": "integer",
-                            "description": f"Amount of new {self.type_name()} to create",
-                        },
-                    },
-                    "required": [self.variable_name],
-                },
+                "description": f"Create a new entry for {self.blueprint.variable_name} of type {self.type_name()}",
+                "parameters": {},
             },
         }
         return [
@@ -175,9 +170,9 @@ class ListField(Field):
 
     def create_item_name(self, prefix: str) -> str:
         if prefix == "":
-            return f"{self.variable_name.replace(' ', '_')}-create_item"
+            return f"{self.variable_name}-create_item"
         else:
-            return f"{prefix}-{self.variable_name.replace(' ', '_')}-create_item"
+            return f"{prefix}-{self.variable_name}-create_item"
 
     def generate_tool_functions(self, prefix="") -> List[FunctionDescriptionPair]:
         all_pairs = []
@@ -432,13 +427,15 @@ class UrlField(StringField):
 
 class AbstractAppConfig(ABC, BaseModel):
 
-    @abstractmethod
     def generate_prompt_string(self):
-        pass
+        return str(self.describe())
 
-    @abstractmethod
-    def generate_prompt_sidebar(self) -> str:
-        pass
+    def generate_prompt_sidebar(self):
+        json_description = self.describe()
+        result_string = ""
+        for field, value in json_description.items():
+            result_string += f"{field}: {value}\n"
+        return result_string
 
     # returns a list containing the FunctionDescriptionPairs of all Fields and Subfields of the AppConfig
     def generate_tool_functions(self) -> List[FunctionDescriptionPair]:
@@ -446,7 +443,7 @@ class AbstractAppConfig(ABC, BaseModel):
         for field_name, field_value in self.__dict__.items():
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                    getattr(field_value, "generate_tool_functions")
+                        getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         prefix=""

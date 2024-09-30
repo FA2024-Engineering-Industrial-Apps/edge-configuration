@@ -2,16 +2,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from iem_integration.devices import get_device_list
-from model.iem_model import UAConnectorConfig
+from model.iem_model import UAConnectorConfig, DocumentationUAConnectorConfig
 from model.app_model import AppModel, App
 from llm_integration.data_extraction import DataExtractor
 from llm_integration.llm_service import GPT4o
 from llm_integration.nl_service import NLService
-from llm import retrieve_model
-from iem_model import App, UAConnectorConfig, AbstractAppConfig, AppModel, DocumentationUAConnectorConfig
-from data_extraction import DataExtractor
-from llm_service import GPT4o, GPT4Turbo
-from nl_service import NLService
 from typing import Tuple
 
 

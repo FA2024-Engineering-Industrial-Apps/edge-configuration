@@ -158,6 +158,9 @@ class DocumentationUAConnectorConfig(AbstractAppConfig):
         value="edge",
     )
 
+    def __init__(self, /, **data: Any):
+        super().__init__(**data)
+
 
 # definition of the UAConnector Config containing all data for the configuration of a UA Connector
 class UAConnectorConfig(AbstractAppConfig):
@@ -182,37 +185,37 @@ class UAConnectorConfig(AbstractAppConfig):
     def __init__(self, /, **data: Any):
         super().__init__(**data)
 
-    def generate_prompt_string(self):
-        string = """
-        [
-            {{
-                name: {0},
-                description: {1},
-                value: {2},
-            }},
-            {{
-                name: {3},
-                description: {4},
-                value: {5},
-            }},
-            {{
-                name: {6},
-                description: {7},
-                value: {8},
-            }}
-        ]
-        """
-        return string.format(
-            self.nameField.variable_name,
-            self.nameField.description,
-            self.nameField.value,
-            self.urlField.variable_name,
-            self.urlField.description,
-            self.urlField.value,
-            self.portField.variable_name,
-            self.portField.description,
-            self.portField.value,
-        )
+    # def generate_prompt_string(self):
+    #     string = """
+    #     [
+    #         {{
+    #             name: {0},
+    #             description: {1},
+    #             value: {2},
+    #         }},
+    #         {{
+    #             name: {3},
+    #             description: {4},
+    #             value: {5},
+    #         }},
+    #         {{
+    #             name: {6},
+    #             description: {7},
+    #             value: {8},
+    #         }}
+    #     ]
+    #     """
+    #     return string.format(
+    #         self.nameField.variable_name,
+    #         self.nameField.description,
+    #         self.nameField.value,
+    #         self.urlField.variable_name,
+    #         self.urlField.description,
+    #         self.urlField.value,
+    #         self.portField.variable_name,
+    #         self.portField.description,
+    #         self.portField.value,
+    #     )
 
     def generate_prompt_sidebar(self):
         string = """
