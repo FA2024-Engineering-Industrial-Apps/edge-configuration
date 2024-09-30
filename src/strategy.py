@@ -3,7 +3,9 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from llm import retrieve_model
-from iem_model import App, UAConnectorConfig, AbstractAppConfig, AppModel
+from models.app import App, AppModel
+from models.abstract_config import AbstractAppConfig
+from models.ua_connector_config import UAConnectorConfig
 from data_extraction import DataExtractor
 from llm_service import GPT4o, GPT4Turbo
 from nl_service import NLService

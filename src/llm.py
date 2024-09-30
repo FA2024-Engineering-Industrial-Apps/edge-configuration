@@ -10,7 +10,7 @@ import json
 from error_handling import LLMInteractionException
 
 from data_extraction import DataExtractor
-from iem_model import AbstractAppConfig
+from models.abstract_config import AbstractAppConfig
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional
 

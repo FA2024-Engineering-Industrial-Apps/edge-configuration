@@ -1,19 +1,8 @@
-from src.models.abstract_config import AbstractAppConfig
-from src.models.fields import (
-    StringField,
-    NestedField,
-    ListField,
-    IntField,
-    UrlField,
-    PortField,
-    EnumField,
-    IPv6Field,
-    BoolField,
-)
+from .fields import NestedField, IntField, StringField, EnumField, ListField, BoolField, IPv6Field, UrlField, PortField
+from typing import Any, Dict
+from .abstract_config import AbstractAppConfig
 
-from typing import Dict, Any
-
-
+# TODO: Create specialized fields, think about which functions are generated for GPT, how updates are handled?
 class OPCUATagAddressField(NestedField):
     namespace: IntField = IntField(
         variable_name="ns",

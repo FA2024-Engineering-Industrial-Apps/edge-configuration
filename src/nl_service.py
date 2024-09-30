@@ -1,6 +1,7 @@
 from typing import List
 
-from iem_model import AbstractAppConfig, App, AppModel
+from models.abstract_config import AbstractAppConfig
+from models.app import App, AppModel
 from llm_service import GPT4o
 
 
