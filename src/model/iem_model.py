@@ -16,7 +16,7 @@ class OPCUATagAddressField(NestedField):
         value=None,
     )
 
-    def to_json(self) -> Dict:
+    def to_iem_json(self) -> Dict:
         if self.visible:
             return {"value": f"ns={self.namespace.value};s={self.nodeID.value}"}
         else:

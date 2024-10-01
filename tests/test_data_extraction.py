@@ -5,6 +5,7 @@ from llm_integration.data_extraction import DataExtractor
 from .mock_data_upa_config import UAConnectorConfig
 from .mock_data import AmbiguousData
 from llm_integration.llm_service import GPT4o
+from history import History
 
 
 @pytest.mark.expensive
@@ -72,7 +73,12 @@ def test_extraction_scenario_1():
         },
     ]
 
-    data_extractor.update_data(messages)
+    history = History()
+
+    for m in messages:
+        history.addPromt_withStrs(m["role"], m["content"])
+
+    data_extractor.update_data(history)
 
     assert dataObj.nameField.value == "Timo Schmidt"
     assert dataObj.urlField.value == "http://timo.schmidt.de"
@@ -116,7 +122,12 @@ def test_ambigous_data():
         },
     ]
 
-    data_extractor.update_data(messages)
+    history = History()
+
+    for m in messages:
+        history.addPromt_withStrs(m["role"], m["content"])
+
+    data_extractor.update_data(history)
 
     assert dataObj.client.name.value == "Martin-Machine"
     assert dataObj.client.technology.value == "JavaScript"

@@ -28,6 +28,11 @@ class App:
         self.config = config
         self.app_id = id
 
+    def fill_from_json(self, json: Dict):
+        self.application_name = json["App-name"]
+        self.installed_device_name = json["Device-name"]
+        self.config.fill_from_json(json)
+
     def generate_prompt_string(self) -> str:
         return """
         {{
@@ -44,12 +49,11 @@ class App:
         )
 
     def generate_tool_functions(self) -> List[FunctionDescriptionPair]:
-        print("got here")
         submit_dict = {
             "type": "function",
             "function": {
                 "name": self.application_name + "_submit_to_iem",
-                "description": f"Install the app {self.application_name} to the IEM.",
+                "description": f"Install or submit the app {self.application_name} to the IEM.",
                 "parameters": {},
                 "required": [],
             },
@@ -57,7 +61,7 @@ class App:
         submit_fct = FunctionDescriptionPair(
             name=self.application_name + "_submit_to_iem",
             fct=self.submit_to_iem,
-            llm_description=submit_dict
+            llm_description=submit_dict,
         )
 
         set_device_name_fct = {
@@ -74,14 +78,14 @@ class App:
                         },
                     },
                     "required": ["installed_device_name"],
-                }
+                },
             },
         }
 
         set_device_name_fct = FunctionDescriptionPair(
             name=self.application_name + "-set_device_name",
             fct=self.set_device_name,
-            llm_description=set_device_name_fct
+            llm_description=set_device_name_fct,
         )
 
         return [submit_fct, set_device_name_fct] + self.config.generate_tool_functions()
@@ -101,14 +105,16 @@ class App:
     def submit_to_iem(self):
         converter = ConfigConverter()
         device_details = get_device_details(self.installed_device_name)
-        prepared_config = converter.convert_to_iem_json(self.config.to_json(), device_details,
-                                                        AppType[self.application_name])
-        #print("DONE")
-        #print(device_details.id)
-        #print(OPC_UA_CONNECTOR_APP_ID)
-        #print(prepared_config)
-        install_app_on_edge_device(device_details.id, OPC_UA_CONNECTOR_APP_ID, [prepared_config])
-
+        prepared_config = converter.convert_to_iem_json(
+            self.config.to_json(), device_details, AppType[self.application_name]
+        )
+        # print("DONE")
+        # print(device_details.id)
+        # print(OPC_UA_CONNECTOR_APP_ID)
+        # print(prepared_config)
+        install_app_on_edge_device(
+            device_details.id, OPC_UA_CONNECTOR_APP_ID, [prepared_config]
+        )
 
     def set_device_name(self, val):
         self.installed_device_name = val
@@ -130,30 +136,32 @@ class AppModel:
             "type": "function",
             "function": {
                 "name": "add_app",
-                "description": f"Create a new app which should be added to the current IEM instance.",
+                "description": f"Create a new app to configure.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "val": {
                             "type": "string",
                             "description": f"The name of the app, which should be added. Possible options are:"
-                                           f"OPC_UA_CONNECTOR, DATABUS.",
+                            f"OPC_UA_CONNECTOR, DATABUS.",
                         },
                     },
                     "required": ["val"],
                 },
             },
         }
-        result_list.append(FunctionDescriptionPair(
-            name="add_app",
-            fct=self.add_app,
-            llm_description=new_app_description,
-        ))
+        result_list.append(
+            FunctionDescriptionPair(
+                name="add_app",
+                fct=self.add_app,
+                llm_description=new_app_description,
+            )
+        )
         print(f"self.apps length is {len(self.apps)}")
         for app in self.apps:
             result_list += app.generate_tool_functions()
-        #print("TOOL FUNCTIONS: ")
-        #print(result_list)
+        # print("TOOL FUNCTIONS: ")
+        # print(result_list)
         return result_list
 
     def generate_prompt_sidebar(self) -> Dict:
@@ -172,7 +180,7 @@ class AppModel:
                 name="OPC_UA_CONNECTOR",
                 description="A app which connects to a configured OPC UA Server and collects data from this.",
                 config=DocumentationUAConnectorConfig(),
-                id="456e041339e744caa9514a1c86536067"
+                id="456e041339e744caa9514a1c86536067",
             )
             print("got here too")
             self.apps.append(new_app)

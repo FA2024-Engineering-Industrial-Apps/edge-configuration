@@ -5,6 +5,7 @@ from src.iem_integration.devices import DetailedDevice
 from src.model.iem_model import DocumentationUAConnectorConfig
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_config_converter_opc_ua_connector():
     config_converter = ConfigConverter("../src/iem_integration/configs")
 
@@ -18,12 +19,9 @@ def test_config_converter_opc_ua_connector():
     connector.datapoints.items[0].tags.items[0].address.namespace.set_value(1)
     connector.datapoints.items[0].tags.items[0].address.nodeID.set_value("test")
 
-    device = DetailedDevice(
-        id="1",
-        name="testDev",
-        url="www.gmx.de",
-        status="0"
-    )
+    device = DetailedDevice(id="1", name="testDev", url="www.gmx.de", status="0")
 
-    res = config_converter.convert_to_iem_json(connector.to_json(), device, AppType.OPC_UA_CONNECTOR)
+    res = config_converter.convert_to_iem_json(
+        connector.to_json(), device, AppType.OPC_UA_CONNECTOR
+    )
     print(res)

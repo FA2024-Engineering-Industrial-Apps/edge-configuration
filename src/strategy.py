@@ -15,13 +15,15 @@ class Strategy(ABC):
     def __init__(self):
         self.history = History()
 
+    model: AppModel
+
     @abstractmethod
     def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
         pass
 
 
 class EdgeConfigStrategy(Strategy):
-    model = None
+    model: AppModel
     system_prompt = """
     You are an expert for configuring Siemens IEM.
 There are many different kinds of customers, some more experienced, but also beginners, which do not how to
@@ -41,8 +43,8 @@ in this field.
 You help the user to configure any app he wants to use or provide general information about the industrial edge.
 For the configuration of apps every field of every app config he wants to use has to be filled with a value.
 Before the user can install the apps to the IEM, for every app the "installed_device_name" has to be set.
+The other fields do not have to be set for installation, as long as the "installed_device_name" is set.
 Ask the user for the values, and answer his questions about the apps and the fields.
-Only after all fields and the "installed_device_name" is set an app may be installed to IEM.
 
 If there is nonsensical information for setting one of the values, skip this value but continue with the next one and call the setter function.
 
@@ -141,7 +143,7 @@ Currently, IEnsight offers the following features:
         name="OPC_UA_CONNECTOR",
         description="A app which connects to a configured OPC UA Server and collects data from this.",
         config=DocumentationUAConnectorConfig(),
-        id="456e041339e744caa9514a1c86536067"
+        id="456e041339e744caa9514a1c86536067",
     )
 
     def create_app_overview(self) -> str:
@@ -155,7 +157,7 @@ Currently, IEnsight offers the following features:
             self.opc_ua_connector.generate_prompt_string()
         )
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         adapted_system_prompt = self.system_prompt.format(
             self.create_app_overview(),
@@ -166,8 +168,7 @@ Currently, IEnsight offers the following features:
 
         self.model: AppModel = AppModel()
         self.model.apps = []
-        self.nl_service = NLService(self.model,
-                                    GPT4o(adapted_system_prompt))
+        self.nl_service = NLService(self.model, GPT4o(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.model)
 
         self.history.addSystemPromt(adapted_system_prompt)
@@ -177,7 +178,10 @@ Currently, IEnsight offers the following features:
 
     def send_message(self):
 
-        self.data_extractor.update_data(self.history)   # changes model, adds new model to configHistory and adds validation promts to promtHistory if necessary
+        self.data_extractor.update_data(
+            self.history
+        )  # changes model, adds new model to configHistory and adds validation promts to promtHistory if necessary
 
-        self.nl_service.retrieve_model(self.history)    # adds assistent response to history
-
+        self.nl_service.retrieve_model(
+            self.history
+        )  # adds assistent response to history
