@@ -58,7 +58,7 @@ if prompt := st.chat_input("Write something"):
 
 
 with st.sidebar:
-    if st.session_state.strategy.model != None:
+    if len(st.session_state.strategy.model.apps) > 0:
         st.subheader("Configuration Parameters")
 
         my_buttons = [
@@ -82,8 +82,15 @@ with st.sidebar:
         if "text" in response_dict and response_dict["type"] == "submit":
             print("Save clicked")
             print(response_dict["text"])
-            st.session_state.strategy.model.apps[0].config.fill_from_json(
+            st.session_state.strategy.model.apps[0].fill_from_json(
                 json.loads(response_dict["text"])
+            )
+
+        if len(st.session_state.strategy.model.apps) > 0:
+            btn_submit = st.button(
+                "Install App",
+                key="btn_submit",
+                on_click=st.session_state.strategy.model.apps[0].submit_to_iem,
             )
     else:
         st.write("No configuration loaded")
