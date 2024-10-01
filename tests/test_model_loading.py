@@ -7,7 +7,7 @@ from .mock_data import UserData, IcreamChoice
 def test_load_from_export():
     dataObj = UserData()
     dataObj.name.set_value("Carl")
-    dataObj.contacts.create_item(1)
+    dataObj.contacts.create_item()
     dataObj.contacts.items[0].phone_number.set_value("123456789")
     dataObj.contacts.items[0].address.set_value("Siemensstr. 1")
 

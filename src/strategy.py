@@ -45,7 +45,7 @@ If there is nonsensical information for setting one of the values, skip this val
 
 # Information on the industrial edge and its apps
 
-The industrial edge is a platform produced by siemens, that is meant to be used to handle data and information flows in production environments. Different types of edge devices excist, which can be connected to PLCs, different cloud providers and other edge devices. The connection between the devices, PLCs and clouds is configured in the industrial edge management (IEM), which is a web interface. On each device different types of apps can be installed. Apps can be used to facilitate connections between devices, to configure dataflows within the device, to process data and for user interfaces about the data. An overview over the IEM, the different types of devices and apps is provided below.
+The industrial edge is a platform produced by siemens, that is meant to be used to handle data and information flows in production environments. Different types of edge devices excist, which can be connected to PLCs, different cloud providers and other edge devices. The connection between the devices, PLCs and clouds is configured in the industrial edge management (IEM), which is a web interface. On each device different types of apps can be installed. Apps can be used to facilitate connections between devices, to configure dataflows within the device, to process data and for user interfaces about the data. An overview over the IEM, the different types of devices and apps is provided below. If there is a (not configurable) behind the type of app it is only non configurable by you, the assistant, but still configurable within the IEM.
 
 ## Industrial Edge Management
 
