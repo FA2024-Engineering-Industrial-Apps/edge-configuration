@@ -24,29 +24,26 @@ class LLM(ABC):
     system_prompt: str
     model_name: str
 
-
     def send_request(self, messages: List[Dict]) -> ChatCompletion:
         return self.client.chat.completions.create(
             model=self.model_name,
             messages=messages,  # type: ignore
         )
 
-    def handle_response(self, response: ChatCompletion) -> Dict:
+    def handle_response(self, response: ChatCompletion) -> str:
         ret = response.choices[0].message.content
         if not ret:
             raise LLMInteractionException(f"{self.model_name} returned empty response")
         return ret
 
     def prompt(self, history: History) -> str:
-        print("Calling LLM:")
         llmPromt = history.genPromtForLLM(n_oldAnswerResponsePairs=1)
-        print(f"llmPromt is: \n{llmPromt}\n\n")
-        response:str = self.prompt_conversation(llmPromt)
+        # print(f"llmPromt is: \n{llmPromt}\n\n")
+        response: str = self.prompt_conversation(llmPromt)
         history.addPromt_withStrs("assistant", response)
-        history.printPromtHistory()
-        history.printConfigHistory()
+        return response
 
-    def prompt_conversation(self, input: List[Dict]) -> Dict:
+    def prompt_conversation(self, input: List[Dict]) -> str:
         try:
             response = self.send_request(input)
             return self.handle_response(response)
