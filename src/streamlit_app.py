@@ -11,7 +11,7 @@ st.markdown(
     <style>
         /* Adjusts the sidebar width */
         .css-1d391kg {
-            width: 25% !important;  /* You can adjust this percentage */
+            width: 35% !important;  /* You can adjust this percentage */
         }
         .css-18e3th9 {
             padding-top: 2rem;  /* Adjust padding as needed */
