@@ -49,12 +49,11 @@ class App:
         )
 
     def generate_tool_functions(self) -> List[FunctionDescriptionPair]:
-        print("got here")
         submit_dict = {
             "type": "function",
             "function": {
                 "name": self.application_name + "_submit_to_iem",
-                "description": f"Install the app {self.application_name} to the IEM.",
+                "description": f"Install or submit the app {self.application_name} to the IEM.",
                 "parameters": {},
                 "required": [],
             },
@@ -137,7 +136,7 @@ class AppModel:
             "type": "function",
             "function": {
                 "name": "add_app",
-                "description": f"Create a new app which should be added to the current IEM instance.",
+                "description": f"Create a new app to configure.",
                 "parameters": {
                     "type": "object",
                     "properties": {

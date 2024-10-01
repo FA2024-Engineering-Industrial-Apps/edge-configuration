@@ -43,8 +43,8 @@ in this field.
 You help the user to configure any app he wants to use or provide general information about the industrial edge.
 For the configuration of apps every field of every app config he wants to use has to be filled with a value.
 Before the user can install the apps to the IEM, for every app the "installed_device_name" has to be set.
+The other fields do not have to be set for installation, as long as the "installed_device_name" is set.
 Ask the user for the values, and answer his questions about the apps and the fields.
-Only after all fields and the "installed_device_name" is set an app may be installed to IEM.
 
 If there is nonsensical information for setting one of the values, skip this value but continue with the next one and call the setter function.
 
