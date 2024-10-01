@@ -1,5 +1,5 @@
 from typing import List, Dict
-from iem_model import AppModel
+from model.app_model import AppModel
 
 class History:
     

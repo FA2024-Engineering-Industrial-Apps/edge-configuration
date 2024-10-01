@@ -10,6 +10,8 @@ st.title("Configuration Generator")
 st.markdown("""Configure your LLM Access in the input below and write your description in the chat input. 
             The assistant will generate a configuration for you.""")
 
+target = st.radio("Target", ["Edge Config"])
+
 if target == "Edge Config":
     # create strategy but only in first run
     if "strategy" not in st.session_state:
