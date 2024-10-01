@@ -4,23 +4,6 @@ from strategy import Strategy, EdgeConfigStrategy
 import json
 from code_editor import code_editor  # type: ignore
 
-st.set_page_config(layout="wide")
-
-st.markdown(
-    """
-    <style>
-        /* Adjusts the sidebar width */
-        .css-1d391kg {
-            width: 35% !important;  /* You can adjust this percentage */
-        }
-        .css-18e3th9 {
-            padding-top: 2rem;  /* Adjust padding as needed */
-        }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
 
 # print header
 st.title("Configuration Generator")
