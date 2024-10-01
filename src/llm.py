@@ -37,7 +37,6 @@ def retrieve_model(prompt: str, model: AbstractAppConfig, history: list) -> str:
         # print(messages)
         response = client.chat.completions.create(model="gpt-4o", messages=messages)
         data_extractor.update_data(messages)
-        # TODO: Validation error feedback
         
         print("The new state of the model:\n", model, "\n")
         history.append(

@@ -2,48 +2,38 @@ import streamlit as st
 import os
 from strategy import Strategy, EdgeConfigStrategy
 
+# create strategy but only in first run
+if "strategy" not in st.session_state:
+    st.session_state.strategy = EdgeConfigStrategy()
+
+# print header
 st.title("Configuration Generator")
+st.markdown("""Configure your LLM Access in the input below and write your description in the chat input. 
+            The assistant will generate a configuration for you.""")
 
-st.markdown(
-    "Configure your LLM Access in the input below and write your description in the chat input. The assistant will generate a configuration for you."
-)
-
-target = st.radio("Target", ["Edge Config"])
-
-strategy: Strategy = None  # type: ignore
-
-if target == "Edge Config":
-    strategy = EdgeConfigStrategy()
-
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-
-for message in st.session_state.messages:
+# print dialog so far
+messages = st.session_state.strategy.history.getPromtHistory_withoutSysPromts()
+for message in messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# wait for user input
 if prompt := st.chat_input("Write something"):
-    # Calling the LLM and possibly change values
-    with st.chat_message("user"):
-     st.markdown(prompt)
     
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-    response_message, current_model = strategy.send_message(prompt, st.session_state.messages)
+    st.session_state.strategy.history.addPromt_withStrs("user", prompt)
+
+    # Calling the LLM and possibly change values
+    st.session_state.strategy.send_message()
 
     with st.chat_message("assistant"):
-        st.markdown(response_message)
+        st.markdown(st.session_state.strategy.history.getLatestPromtAsStr("assistant"))
         
-    st.session_state.messages.append({"role": "assistant", "content": response_message})
-
-    # TODO: Add an potential extra system promt to st.session_state.messages to tell the LLM
-    # that a validation failed and the value was not se
-
     with st.sidebar:
         st.subheader("Configuration Parameters")
-        st.markdown(current_model.generate_prompt_sidebar())
+        st.markdown(st.session_state.strategy.model.generate_prompt_sidebar())
 
 
 

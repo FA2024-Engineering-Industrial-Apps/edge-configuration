@@ -8,6 +8,7 @@ import streamlit as st
 from enum import Enum
 import json
 from error_handling import LLMInteractionException
+from history import History
 
 from iem_model import AppModel
 from abc import ABC, abstractmethod
@@ -27,21 +28,6 @@ class LLM(ABC):
     system_prompt: str
     model_name: str
 
-    def prepare_prompt(
-        self, input_prompt: str, history: list, config: AppModel
-    ) -> List[Dict]:
-        msg = history[-2:]
-        if self.system_prompt:
-            msg.insert(0, {"role": "system", "content": self.system_prompt})
-        msg.append(
-            {
-                "role": "system",
-                "content": "The current configuration is: "
-                + config.generate_prompt_string(),
-            }
-        )
-        msg.append({"role": "user", "content": input_prompt})
-        return msg
 
     def send_request(self, messages: List[Dict]) -> ChatCompletion:
         return self.client.chat.completions.create(
@@ -49,17 +35,22 @@ class LLM(ABC):
             messages=messages,  # type: ignore
         )
 
-    def handle_response(self, response: ChatCompletion) -> str:
+    def handle_response(self, response: ChatCompletion) -> Dict:
         ret = response.choices[0].message.content
         if not ret:
             raise LLMInteractionException(f"{self.model_name} returned empty response")
         return ret
 
-    def prompt(self, input: str, history: list, config: AppModel) -> str:
-        msg = self.prepare_prompt(input, history, config)
-        return self.prompt_conversation(msg)
+    def prompt(self, history: History) -> str:
+        print("Calling LLM:")
+        llmPromt = history.genPromtForLLM(n_oldAnswerResponsePairs=1)
+        print(f"llmPromt is: \n{llmPromt}\n\n")
+        response:str = self.prompt_conversation(llmPromt)
+        history.addPromt_withStrs("assistant", response)
+        history.printPromtHistory()
+        history.printConfigHistory()
 
-    def prompt_conversation(self, input: List[Dict]) -> str:
+    def prompt_conversation(self, input: List[Dict]) -> Dict:
         try:
             response = self.send_request(input)
             return self.handle_response(response)
