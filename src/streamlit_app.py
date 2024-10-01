@@ -4,8 +4,22 @@ from strategy import Strategy, EdgeConfigStrategy
 import json
 from code_editor import code_editor  # type: ignore
 
+st.set_page_config(layout="wide")
 
-col1, col2 = st.columns(2)
+st.markdown(
+    """
+    <style>
+        /* Adjusts the sidebar width */
+        .css-1d391kg {
+            width: 25% !important;  /* You can adjust this percentage */
+        }
+        .css-18e3th9 {
+            padding-top: 2rem;  /* Adjust padding as needed */
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 st.title("Configuration Generator")
 
@@ -38,9 +52,10 @@ if prompt := st.chat_input("Write something"):
 
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    response_message, current_model = strategy.send_message(
-        prompt, st.session_state.messages
-    )
+    with st.spinner("Waiting for assistant response..."):
+        response_message, current_model = strategy.send_message(
+            prompt, st.session_state.messages
+        )
 
     with st.chat_message("assistant"):
         st.markdown(response_message)
@@ -80,47 +95,49 @@ with st.sidebar:
     else:
         st.write("No configuration loaded")
 
+    st.divider()
 
-st.divider()
+    with st.expander("Your API Settings"):
+        model = st.radio("Model", ["gpt-4o", "mixtral-7b-instruct"])
+        st.session_state["model"] = model
 
-with st.expander("Your API Settings"):
-    model = st.radio("Model", ["gpt-4o", "mixtral-7b-instruct"])
-    st.session_state["model"] = model
+        openai_key = st.text_input(
+            "OpenAI API Key",
+            type="password",
+            key="openai_key",
+            disabled=model != "gpt-4o",
+        )
 
-    openai_key = st.text_input(
-        "OpenAI API Key", type="password", key="openai_key", disabled=model != "gpt-4o"
-    )
+        def save_cred_openai():
+            st.session_state["openai_key"] = openai_key
+            os.environ["OPENAI_API_KEY"] = openai_key
+            st.success("Saved Key!")
 
-    def save_cred_openai():
-        st.session_state["openai_key"] = openai_key
-        os.environ["OPENAI_API_KEY"] = openai_key
-        st.success("Saved Key!")
+        openai_btn = st.button("Save", on_click=save_cred_openai, key="openai_btn")
 
-    openai_btn = st.button("Save", on_click=save_cred_openai, key="openai_btn")
+        mixtral_key = st.text_input(
+            "Siemens LLM Key",
+            type="password",
+            key="mixtral_key",
+            disabled=model != "mixtral-7b-instruct",
+        )
 
-    mixtral_key = st.text_input(
-        "Siemens LLM Key",
-        type="password",
-        key="mixtral_key",
-        disabled=model != "mixtral-7b-instruct",
-    )
+        def save_cred_mixtral():
+            st.session_state["mixtral_key"] = mixtral_key
+            os.environ["MIXTRAL_KEY"] = mixtral_key
+            st.success("Saved Key!")
 
-    def save_cred_mixtral():
-        st.session_state["mixtral_key"] = mixtral_key
-        os.environ["MIXTRAL_KEY"] = mixtral_key
-        st.success("Saved Key!")
+        mixtral_btn = st.button("Save", on_click=save_cred_mixtral, key="mixtral_btn")
 
-    mixtral_btn = st.button("Save", on_click=save_cred_mixtral, key="mixtral_btn")
+        st.markdown("IEM API Credentials")
 
-    st.markdown("IEM API Credentials")
+        iem_user = st.text_input("Username", key="iem_user")
+        iem_pass = st.text_input("Password", type="password", key="iem_pass")
 
-    iem_user = st.text_input("Username", key="iem_user")
-    iem_pass = st.text_input("Password", type="password", key="iem_pass")
+        def save_cred_iem():
+            st.session_state["iem_user"] = iem_user
+            st.session_state["iem_pass"] = iem_pass
 
-    def save_cred_iem():
-        st.session_state["iem_user"] = iem_user
-        st.session_state["iem_pass"] = iem_pass
+            st.success("Saved Credentials!")
 
-        st.success("Saved Credentials!")
-
-    st.button("Save", key="iem_btn", on_click=save_cred_iem)
+        st.button("Save", key="iem_btn", on_click=save_cred_iem)
