@@ -7,10 +7,12 @@ from model.app_model import AppModel, App
 from llm_integration.data_extraction import DataExtractor
 from llm_integration.llm_service import GPT4o
 from llm_integration.nl_service import NLService
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 class Strategy(ABC):
+
+    model: Optional[AppModel] = None
 
     @abstractmethod
     def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
@@ -135,7 +137,7 @@ Currently, IEnsight offers the following features:
         name="OPC_UA_CONNECTOR",
         description="A app which connects to a configured OPC UA Server and collects data from this.",
         config=DocumentationUAConnectorConfig(),
-        id="456e041339e744caa9514a1c86536067"
+        id="456e041339e744caa9514a1c86536067",
     )
 
     def create_app_overview(self) -> str:
@@ -159,8 +161,7 @@ Currently, IEnsight offers the following features:
 
         self.model: AppModel = AppModel()
         self.model.apps = []
-        self.nl_service = NLService(self.model,
-                                    GPT4o(adapted_system_prompt))
+        self.nl_service = NLService(self.model, GPT4o(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.model)
 
     def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:

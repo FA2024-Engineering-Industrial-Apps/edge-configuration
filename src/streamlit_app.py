@@ -2,6 +2,10 @@ import streamlit as st
 import os
 from strategy import Strategy, EdgeConfigStrategy
 import json
+from code_editor import code_editor  # type: ignore
+
+
+col1, col2 = st.columns(2)
 
 st.title("Configuration Generator")
 
@@ -46,14 +50,35 @@ if prompt := st.chat_input("Write something"):
     # TODO: Add an potential extra system promt to st.session_state.messages to tell the LLM
     # that a validation failed and the value was not se
 
-    with st.sidebar:
+
+with st.sidebar:
+    if strategy.model != None:
         st.subheader("Configuration Parameters")
-        st.markdown(
-            f"""
-        ```javascript
-        {json.dumps(current_model.generate_prompt_sidebar(), indent=2)}
-        """
+
+        my_buttons = [
+            {
+                "name": "Submit",
+                "feather": "Save",
+                "alwaysOn": True,
+                "commands": ["submit"],
+                "style": {"top": "0.46rem", "right": "0.4rem"},
+            }
+        ]
+        # The default value for the lang argument is "python"
+        response_dict = code_editor(
+            json.dumps(strategy.model.generate_prompt_sidebar(), indent=2),
+            lang="javascript",
+            buttons=my_buttons,
         )
+
+        if "text" in response_dict and response_dict["type"] == "submit":
+            print("Save clicked")
+            print(response_dict["text"])
+            strategy.model.apps[0].config.fill_from_json(
+                json.loads(response_dict["text"])
+            )
+    else:
+        st.write("No configuration loaded")
 
 
 st.divider()

@@ -46,6 +46,9 @@ class Field(ABC, BaseModel):
     def describe(self) -> Dict:
         pass
 
+    def to_iem_json(self) -> Dict:
+        return self.to_json()
+
     @abstractmethod
     def to_json(self) -> Dict:
         pass
@@ -116,7 +119,9 @@ class EnumField(Field, ABC):
 
     def to_json(self) -> Dict:
         if self.visible:
-            return {"value": self.enum_mapping[self.enum_key] if self.enum_key else None}
+            return {
+                "value": self.enum_mapping[self.enum_key] if self.enum_key else None
+            }
         else:
             return {}
 
@@ -126,6 +131,9 @@ class EnumField(Field, ABC):
             if v == json:
                 self.enum_key = k
                 return
+        if json is None:
+            self.enum_key = None
+            return
         raise ValueError(f"No matching key found for {json}")
 
 
@@ -141,7 +149,6 @@ class ListField(Field):
 
     def create_item(self):
         self.items.append(self.blueprint.model_copy(deep=True))
-
 
     def create_prefix(self, preprefix: str) -> str:
         if preprefix == "":
@@ -301,10 +308,12 @@ class ValueField(Field, ABC):
         if self.validate_value(val):
             self.value = val
         else:
-            raise ValidationException("Value Validation failed / yielded false.")
+            raise ValidationException(
+                f"Value Validation failed / yielded fals for field {self.variable_name} for value {self.value}."
+            )
 
     def validate_value(self, val) -> bool:
-        return val is not None
+        return True
 
     # returns a senseful name of the set_value function used for the llm description
     def setter_name(self, prefix) -> str:
@@ -390,31 +399,46 @@ class BoolField(ValueField):
 class IPField(StringField):
 
     def validate_value(self, val) -> bool:
-        return validators.ipv4(val) == True or validators.ipv6(val) == True
+        if val != None:
+            return validators.ipv4(val) or validators.ipv6(val)
+        else:
+            return True
 
 
 class IPv4Field(IPField):
 
     def validate_value(self, val) -> bool:
-        return validators.ipv4(val) == True
+        if val != None:
+            return validators.ipv4(val)
+        else:
+            return True
 
 
 class IPv6Field(IPField):
 
     def validate_value(self, val) -> bool:
-        return validators.ipv6(val) == True
+        if val != None:
+            return validators.ipv6(val)
+        else:
+            return True
 
 
 class PortField(IntField):
 
     def validate_value(self, val) -> bool:
-        return 0 <= val <= 65535  # type: ignore
+        if val != None:
+            return 0 <= val <= 65535  # type: ignore
+        else:
+            return True
 
 
 class EmailField(StringField):
 
     def validate_value(self, val) -> bool:
-        return validators.email(val) == True
+        if val != None:
+            return validators.email(val)
+        else:
+            return True
 
 
 class UrlField(StringField):
@@ -443,7 +467,7 @@ class AbstractAppConfig(ABC, BaseModel):
         for field_name, field_value in self.__dict__.items():
             if isinstance(field_value, Field):
                 if hasattr(field_value, "generate_tool_functions") and callable(
-                        getattr(field_value, "generate_tool_functions")
+                    getattr(field_value, "generate_tool_functions")
                 ):
                     sub_functions = getattr(field_value, "generate_tool_functions")(
                         prefix=""
