@@ -12,7 +12,7 @@ from typing import Tuple, Optional
 
 class Strategy(ABC):
 
-    model: Optional[AppModel] = None
+    model: AppModel
 
     @abstractmethod
     def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
@@ -20,7 +20,7 @@ class Strategy(ABC):
 
 
 class EdgeConfigStrategy(Strategy):
-    model = None
+    model: AppModel
     system_prompt = """
     You are an expert for configuring Siemens IEM.
 There are many different kinds of customers, some more experienced, but also beginners, which do not how to
@@ -151,7 +151,7 @@ Currently, IEnsight offers the following features:
             self.opc_ua_connector.generate_prompt_string()
         )
 
-    def __init__(self):
+    def __init__(self) -> None:
         adapted_system_prompt = self.system_prompt.format(
             self.create_app_overview(),
             "\n".join(
