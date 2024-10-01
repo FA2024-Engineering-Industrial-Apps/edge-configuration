@@ -5,6 +5,7 @@ src/franks_playground.py
 src/testing_validators.py
 config.json
 src/function_calling.py
+src/idea_streamlit_app.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
