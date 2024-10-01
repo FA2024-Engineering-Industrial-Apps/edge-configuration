@@ -7,10 +7,13 @@ from model.app_model import AppModel, App
 from llm_integration.data_extraction import DataExtractor
 from llm_integration.llm_service import GPT4o
 from llm_integration.nl_service import NLService
-from typing import Tuple, Optional
+from typing import Tuple
+from history import History
 
 
 class Strategy(ABC):
+    def __init__(self):
+        self.history = History()
 
     model: AppModel
 
@@ -47,7 +50,7 @@ If there is nonsensical information for setting one of the values, skip this val
 
 # Information on the industrial edge and its apps
 
-The industrial edge is a platform produced by siemens, that is meant to be used to handle data and information flows in production environments. Different types of edge devices excist, which can be connected to PLCs, different cloud providers and other edge devices. The connection between the devices, PLCs and clouds is configured in the industrial edge management (IEM), which is a web interface. On each device different types of apps can be installed. Apps can be used to facilitate connections between devices, to configure dataflows within the device, to process data and for user interfaces about the data. An overview over the IEM, the different types of devices and apps is provided below.
+The industrial edge is a platform produced by siemens, that is meant to be used to handle data and information flows in production environments. Different types of edge devices excist, which can be connected to PLCs, different cloud providers and other edge devices. The connection between the devices, PLCs and clouds is configured in the industrial edge management (IEM), which is a web interface. On each device different types of apps can be installed. Apps can be used to facilitate connections between devices, to configure dataflows within the device, to process data and for user interfaces about the data. An overview over the IEM, the different types of devices and apps is provided below. If there is a (not configurable) behind the type of app it is only non configurable by you, the assistant, but still configurable within the IEM.
 
 ## Industrial Edge Management
 
@@ -68,31 +71,36 @@ Information about the devices is not proposed in detail here. A list of the avai
 
 ## Apps on the industrial edge
 
+
 ### OPC-UA Server (not configurable)
 
-The OPC-UA server uses the OPC-UA protocol to publish data in a local network. Multilpe devices can reveive the data send out by the OPC-UA server. The data is most typically regular intervall timeseries data, such as sensor measurements. The different datapoints have to be defined in advance.
+The OPC-UA server uses the OPC-UA protocol to publish data in a local network. Multilpe devices can receive the data send out by the OPC-UA server. The data is most typically regular intervall timeseries data, such as sensor measurements. The different datapoints have to be defined in advance.
 
 The official description is given here:
 Edge OPC UA server application runs on Industrial Edge Device (IED) which provides open standard access to data that is available to the customers. Edge OPC UA server connects to the Databus for extracting the data. Any data source which supports Databus common payload format can be modeled in Edge OPC UA server. The application has two parts; Edge OPC UA Server Configurator and Edge OPC UA Server.
 
 ### OPC-UA Connector (configurable)
 
-The OPC-UA connector connects an edge device to a opc-ua server. It can only receive data from the server and can not send any data. It uses the OPC-UA protocol. It can be either connected to an edge device with the OPC-UA server installed, or to other devices in the same network that use OPC-UA, such as integrated sensors.
+The OPC-UA connector connects an edge device to an opc-ua server. It can only receive data from the server and can not send any data. It uses the OPC-UA protocol. It can be either connected to an edge device with the OPC-UA server installed, or to other devices in the same network that use OPC-UA, such as integrated sensors.
 
 ### Databus (not configurable)
 
-The databus application is used to publish data on one edge device. It has to be used to for example facilitate the data exchange between the OPC-UA connector and the cloud connector. Every datapoint is specified as a topic, which is then referenced in other apps when trying to access that data.
+The databus application is used to publish data on one edge device. It has to be used to for example facilitate the data exchange between the OPC-UA connector and the cloud connector installed on one device. Every datapoint is specified as a topic, which is then referenced in other apps when trying to access that data.
 
 The official description of the databus is given here:
-The Databus Configurator provides you information about all available users including their access rights for the corresponding Industrial Edge Device. In addition, you can create users and grant users access rights to the Databus of the corresponding Industrial Edge Devices.
-You can connect the SIMATIC S7 Connector and other apps to the Databus and thereby obtain access rights to the Databus. This allows you to use the data that the Industrial Edge Runtime of the SIMATIC S7 Connector sends to the Databus for your individual application.
-The Databus Configurator supports multiple user access with the following scenarios:
-• One user per session is allowed for each Databus Configurator of the corresponding IED.
-• Each user can open Databus Configurator of multiple IEDs.
-• Two users can access Databus of different IEDs.
+The Databus provides access to the data of the field devices. The Industrial Edge Runtime sends the data from the field devices to the Databus. If you want to use this data for your custom application, you must connect your application to the Databus of the corresponding Industrial Edge Device (IED). Connectors are needed to fetch data from field devices. The configuration of the application is stored in the Databus, which allows the access of the app to the Databus.
+The Databus consists of the following two components:
+
+1. Databus Configurator in Industrial Edge Management:
+The Databus Configurator in Industrial Edge Management includes a user interface. The Databus Configurator gives you an overview of the Databus-specific details of the corresponding Industrial Edge Device.
+
+2. Databus:
+The Databus is a distributed application that runs on the individual Industrial Edge Device. Data point values from the field devices are sent to the Databus. Additionally, you can configure own data points as required. You can use this application to access the data of the Databus for your individual applications.
+
+3. Databus Provisioning Service (DPS):
+Now Databus can also be configured through APIs using Databus Provisioning Service (DPS). For more deatils refer (Page 33)
 
 ### DataXess (not configurable)
-
 
 DataXess makes data collection possible from different Edge devices and brings it to smart, intelligent and powerful applications for further analytics and processing.
 DataXess is an IoT based application which collects data from different Edge devices and publishes data to any cloud application subscribing to it. It primarily facilitates device to device communication, which means data from low power and high power Edge devices are transmitted from multiple devices to a single device. Each Edge device collects data from sensors or field devices, and transmits data through Databus to DataXess. DataXess provides a solution to streamline data published from different Edge devices into a single Edge device through Databus.
@@ -105,10 +113,10 @@ Devices are grouped and one of the device is assigned as an Aggregator device.
 
 The Cloud Connector allows you to send data from your Industrial Edge Device to a cloud infrastructure, such as the Azure IoT Hub, or AWS IoT, or to a local infrastructure. All data is transmitted using the MQTT protocol and encrypted via TLS/SSL. The Cloud Connector consists of the following two components:
 
-Cloud Connector Configurator
-Cloud Connector
+1. Cloud Connector Configurator:
 With the Cloud Connector Configurator, you can configure Cloud Connector application installed in any IE Device, from your IEM.
 
+2. Cloud Connector:
 The Cloud Connector accesses data of the Databus from defined topics.
 
 ### Edgeshark (not configurable)
@@ -118,8 +126,6 @@ Discover and capture the virtual networking of your containers in your SIEMENS I
 See the virtual "wiring" and network configuration in your web browser. For instance, your container's IP and MAC addresses, their IP routing, and DNS configuration.
 
 Easily capture your container network traffic with the SIEMENS Edgeshark plugin for the Wireshark network capture program. Simply install the Edgeshark plugin on your desktop system (Windows and Linux) and you are ready to capture. In the plugin, you see the containers running on your Industrial Edge device. Just click on the container you want to capture from.
-
-No fiddling around with low-level Linux CLI tools, or baking capture tools into your containers for diagnosis.
 
 ### IEnsight (not configurable)
 
@@ -152,6 +158,7 @@ Currently, IEnsight offers the following features:
         )
 
     def __init__(self) -> None:
+        super().__init__()
         adapted_system_prompt = self.system_prompt.format(
             self.create_app_overview(),
             "\n".join(
@@ -164,12 +171,17 @@ Currently, IEnsight offers the following features:
         self.nl_service = NLService(self.model, GPT4o(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.model)
 
-    def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
-        # print(history)
-        nl_response = self.nl_service.retrieve_model(prompt, self.model, history)
-        updated_history = history + [
-            {"role": "user", "content": prompt},
-            {"role": "assistant", "content": nl_response},
-        ]
-        self.data_extractor.update_data([{"role": "user", "content": prompt}])
-        return nl_response, self.model
+        self.history.addSystemPromt(adapted_system_prompt)
+
+        # add first entry to the configHistory
+        self.history.addConfig(self.model)
+
+    def send_message(self):
+
+        self.data_extractor.update_data(
+            self.history
+        )  # changes model, adds new model to configHistory and adds validation promts to promtHistory if necessary
+
+        self.nl_service.retrieve_model(
+            self.history
+        )  # adds assistent response to history

@@ -37,19 +37,10 @@ class OPCUATagConfig(NestedField):
     name: StringField = StringField(
         variable_name="name", description="Name of OPC UA Server data node", value=None
     )
-    address: OPCUATagAddressField = OPCUATagAddressField(
+    address: StringField = StringField(
         variable_name="address",
-        description="Address of data within the OPC UA server. Consists of namespace index (ns) and node id (s).",
-        nodeID=StringField(
-            variable_name="nodeID",
-            description="ID of the data node within the OPC UA server",
-            value=None,
-        ),
-        namespace=IntField(
-            variable_name="namespace",
-            description="Index of namespace for data within OPC UA Server",
-            value=None,
-        ),
+        description="Address of data within the OPC UA server.",
+        value=None
     )
     # EnumField?
     dataType: StringField = StringField(
@@ -114,7 +105,7 @@ class OPCUADatapointConfig(NestedField):
             description="Tag representing a data node of OPC UA Server",
         ),
     )
-    OPCUAUrl: IPv6Field = IPv6Field(
+    OPCUAUrl: StringField = StringField(
         variable_name="OPCUAUrl",
         description="The URL of the corresponding OPC UA Server.",
         value=None,

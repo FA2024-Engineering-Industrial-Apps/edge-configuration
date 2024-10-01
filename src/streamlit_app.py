@@ -21,53 +21,44 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("Configuration Generator")
 
+# print header
+st.title("Configuration Generator")
 st.markdown(
-    "Configure your LLM Access in the input below and write your description in the chat input. The assistant will generate a configuration for you."
+    """Configure your LLM Access in the input below and write your description in the chat input. 
+            The assistant will generate a configuration for you."""
 )
 
 target = st.radio("Target", ["Edge Config"])
 
-strategy: Strategy = None  # type: ignore
-
 if target == "Edge Config":
+    # create strategy but only in first run
     if "strategy" not in st.session_state:
-        st.session_state["strategy"] = EdgeConfigStrategy()
-    strategy = st.session_state["strategy"]
+        st.session_state.strategy = EdgeConfigStrategy()
 
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-
-for message in st.session_state.messages:
+messages = st.session_state.strategy.history.getPromtHistory_withoutSysPromts()
+for message in messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# wait for user input
 if prompt := st.chat_input("Write something"):
-    # Calling the LLM and possibly change values
+
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.strategy.history.addPromt_withStrs("user", prompt)
 
     with st.spinner("Waiting for assistant response..."):
-        response_message, current_model = strategy.send_message(
-            prompt, st.session_state.messages
-        )
+        # Calling the LLM and possibly change values
+        st.session_state.strategy.send_message()
 
     with st.chat_message("assistant"):
-        st.markdown(response_message)
-
-    st.session_state.messages.append({"role": "assistant", "content": response_message})
-
-    # TODO: Add an potential extra system promt to st.session_state.messages to tell the LLM
-    # that a validation failed and the value was not se
+        st.markdown(st.session_state.strategy.history.getLatestPromtAsStr("assistant"))
 
 
 with st.sidebar:
-    if strategy.model != None:
+    if st.session_state.strategy.model != None:
         st.subheader("Configuration Parameters")
 
         my_buttons = [
@@ -81,7 +72,9 @@ with st.sidebar:
         ]
         # The default value for the lang argument is "python"
         response_dict = code_editor(
-            json.dumps(strategy.model.generate_prompt_sidebar(), indent=2),
+            json.dumps(
+                st.session_state.strategy.model.generate_prompt_sidebar(), indent=2
+            ),
             lang="javascript",
             buttons=my_buttons,
         )
@@ -89,7 +82,7 @@ with st.sidebar:
         if "text" in response_dict and response_dict["type"] == "submit":
             print("Save clicked")
             print(response_dict["text"])
-            strategy.model.apps[0].config.fill_from_json(
+            st.session_state.strategy.model.apps[0].config.fill_from_json(
                 json.loads(response_dict["text"])
             )
     else:
