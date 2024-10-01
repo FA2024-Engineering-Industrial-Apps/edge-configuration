@@ -8,9 +8,12 @@ from llm_integration.data_extraction import DataExtractor
 from llm_integration.llm_service import GPT4o
 from llm_integration.nl_service import NLService
 from typing import Tuple
+from history import History
 
 
 class Strategy(ABC):
+    def __init__(self):
+        self.history = History()
 
     @abstractmethod
     def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
@@ -153,6 +156,7 @@ Currently, IEnsight offers the following features:
         )
 
     def __init__(self):
+        super().__init__()
         adapted_system_prompt = self.system_prompt.format(
             self.create_app_overview(),
             "\n".join(
@@ -166,12 +170,14 @@ Currently, IEnsight offers the following features:
                                     GPT4o(adapted_system_prompt))
         self.data_extractor = DataExtractor(self.model)
 
-    def send_message(self, prompt: str, history: list) -> Tuple[str, AppModel]:
-        # print(history)
-        nl_response = self.nl_service.retrieve_model(prompt, self.model, history)
-        updated_history = history + [
-            {"role": "user", "content": prompt},
-            {"role": "assistant", "content": nl_response},
-        ]
-        self.data_extractor.update_data([{"role": "user", "content": prompt}])
-        return nl_response, self.model
+        self.history.addSystemPromt(adapted_system_prompt)
+
+        # add first entry to the configHistory
+        self.history.addConfig(self.model)
+
+    def send_message(self):
+
+        self.data_extractor.update_data(self.history)   # changes model, adds new model to configHistory and adds validation promts to promtHistory if necessary
+
+        self.nl_service.retrieve_model(self.history)    # adds assistent response to history
+

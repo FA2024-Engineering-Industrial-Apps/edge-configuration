@@ -1,6 +1,8 @@
 from model.app_model import AppModel
 from llm_integration.llm_service import GPT4o
 
+from history import History
+
 
 class NLService:
 
@@ -8,5 +10,5 @@ class NLService:
         self.model = data_obj
         self.client = llm
 
-    def retrieve_model(self, prompt: str, model: AppModel, history: list) -> str:
-        return self.client.prompt(prompt, history, model)
+    def retrieve_model(self, history: History) -> str:
+        return self.client.prompt(history)
