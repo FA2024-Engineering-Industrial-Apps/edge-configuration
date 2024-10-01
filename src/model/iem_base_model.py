@@ -65,7 +65,7 @@ class EnumField(Field, ABC):
 
     def set_value(self, key: str):
         if self.validate_value(key):
-            self.key = key
+            self.enum_key = key
         else:
             # To be pushed
             raise ValidationException("Selector option is not available")
@@ -87,7 +87,7 @@ class EnumField(Field, ABC):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "val": {
+                        "key": {
                             "type": "string",
                             "description": f"Selected option from selector {self.variable_name}",
                         },
