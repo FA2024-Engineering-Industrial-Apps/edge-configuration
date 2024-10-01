@@ -219,10 +219,13 @@ class ListField(Field):
 
     def fill_from_json(self, json: Any):
         if isinstance(json, list):
-            for i in json:
-                new_item = self.blueprint.model_copy(deep=True)
-                new_item.fill_from_json(i)
-                self.items.append(new_item)
+            for idx, i in enumerate(json):
+                if idx < len(self.items):
+                    self.items[idx].fill_from_json(i)
+                else:
+                    new_item = self.blueprint.model_copy(deep=True)
+                    new_item.fill_from_json(i)
+                    self.items.append(new_item)
 
 
 # general definition of a Field containing other Fields
